@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/about/page": "/about",
+  "/account/page": "/account",
+  "/admin/dashboard/page": "/admin/dashboard",
+  "/admin/page": "/admin",
+  "/api/guidance-agent/route": "/api/guidance-agent",
+  "/chat/page": "/chat",
+  "/contact/page": "/contact",
+  "/favicon.ico/route": "/favicon.ico",
+  "/guidance/page": "/guidance",
+  "/medical-disclaimer/page": "/medical-disclaimer",
+  "/page": "/",
+  "/payment/cancel/page": "/payment/cancel",
+  "/payment/success/page": "/payment/success",
+  "/pricing/page": "/pricing",
+  "/privacy-policy/page": "/privacy-policy",
+  "/products/page": "/products",
+  "/refund-policy/page": "/refund-policy",
+  "/terms/page": "/terms"
+}

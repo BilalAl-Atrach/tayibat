@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/about/page": "app/about/page.js",
+  "/account/page": "app/account/page.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/guidance-agent/route": "app/api/guidance-agent/route.js",
+  "/chat/page": "app/chat/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/guidance/page": "app/guidance/page.js",
+  "/medical-disclaimer/page": "app/medical-disclaimer/page.js",
+  "/page": "app/page.js",
+  "/payment/cancel/page": "app/payment/cancel/page.js",
+  "/payment/success/page": "app/payment/success/page.js",
+  "/pricing/page": "app/pricing/page.js",
+  "/privacy-policy/page": "app/privacy-policy/page.js",
+  "/products/page": "app/products/page.js",
+  "/refund-policy/page": "app/refund-policy/page.js",
+  "/terms/page": "app/terms/page.js"
+}
