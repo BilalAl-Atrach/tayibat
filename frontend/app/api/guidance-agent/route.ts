@@ -54,7 +54,8 @@ interface BillingAccess {
   };
 }
 
-const apiBaseUrl = process.env.LARAVEL_API_BASE_URL || "http://127.0.0.1:8000/api";
+const apiBaseUrl =
+  process.env.LARAVEL_API_BASE_URL || "https://tayibat-production.up.railway.app/api";
 
 const fetchJson = async <T,>(path: string, authorization?: string | null): Promise<T> => {
   const response = await fetch(`${apiBaseUrl}${path}`, {
