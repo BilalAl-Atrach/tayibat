@@ -6,21 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-public function up()
-{
-    Schema::table('users', function (Blueprint $table) {
-        $table->string('condition')->nullable()->default(null)->change();
-    });
-}
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            if (Schema::hasColumn('users', 'condition')) {
+                $table->string('condition')->nullable()->default(null)->change();
+            } else {
+                $table->string('condition')->nullable()->default(null)->after('password');
+            }
+        });
+    }
 
-public function down()
-{
-    Schema::table('users', function (Blueprint $table) {
-        $table->string('condition')->default('restricted_diet')->change();
-    });
-}
-
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            if (Schema::hasColumn('users', 'condition')) {
+                $table->string('condition')->default('restricted_diet')->change();
+            }
+        });
+    }
 };

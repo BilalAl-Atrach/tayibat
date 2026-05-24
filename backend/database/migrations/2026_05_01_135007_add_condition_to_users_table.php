@@ -9,13 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            if (! Schema::hasColumn('users', 'condition')) {
+                $table->string('condition')->nullable()->default(null)->after('password');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('condition');
+            if (Schema::hasColumn('users', 'condition')) {
+                $table->dropColumn('condition');
+            }
         });
     }
 };
