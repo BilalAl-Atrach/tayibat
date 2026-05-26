@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import axios from "axios";
 import api from "@/lib/api";
 
@@ -26,7 +25,6 @@ export default function SignupLoginModal({ onClose }: { onClose: () => void }) {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error">("error");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -63,7 +61,7 @@ export default function SignupLoginModal({ onClose }: { onClose: () => void }) {
       }
 
       onClose();
-      router.refresh();
+      window.location.reload();
     } catch (err) {
       setMessageType("error");
 

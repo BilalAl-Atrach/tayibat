@@ -5,7 +5,7 @@ import { Bot, CalendarDays, HeartPulse, Leaf, ShieldCheck, Sparkles } from "luci
 
 const features = [
   {
-    title: "Backend Rule Guidance",
+    title: "Tayibat Rule Guidance",
     desc: "Food answers are based on Tayibat's condition-specific allowed, moderate, and avoid rules.",
     icon: ShieldCheck,
   },
