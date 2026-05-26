@@ -72,7 +72,7 @@ export default function ContactPage() {
           </p>
           <div className="mt-8 rounded-lg border border-green-100 bg-green-50 p-5 text-sm text-gray-700">
             <p className="font-semibold text-green-800">Email</p>
-            <p className="mt-1">support@tayibat.local</p>
+            <p className="mt-1">tayibatdiet@gmail.com</p>
           </div>
         </div>
 
