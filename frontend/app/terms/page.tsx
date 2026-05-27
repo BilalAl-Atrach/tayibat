@@ -1,3 +1,14 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Use",
+  description:
+    "Read the Tayibat terms of use for nutrition guidance, AI responses, diet plan packages, paid access, and user responsibilities.",
+  alternates: {
+    canonical: "/terms",
+  },
+};
+
 export default function TermsPage() {
   return (
     <main className="min-h-screen bg-white px-4 py-10 sm:px-6">

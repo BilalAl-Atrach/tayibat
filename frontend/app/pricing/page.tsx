@@ -1,6 +1,16 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Bot, CalendarDays, Check, Crown, ShieldCheck } from "lucide-react";
 import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
+
+export const metadata: Metadata = {
+  title: "Pricing",
+  description:
+    "View Tayibat Premium access and paid diet plan packages, including AI guidance, full food tables, and 1 week, 1 month, or 3 month plans.",
+  alternates: {
+    canonical: "/pricing",
+  },
+};
 
 const dietPlanPackages = [
   {

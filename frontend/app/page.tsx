@@ -1,7 +1,15 @@
-"use client";
-
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Bot, CalendarDays, HeartPulse, Leaf, ShieldCheck, Sparkles } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "AI Nutrition Guidance and Diet Plans",
+  description:
+    "Use Tayibat to choose a health goal, view allowed and avoid foods, ask AI nutrition questions, and generate personalized diet plans.",
+  alternates: {
+    canonical: "/",
+  },
+};
 
 const features = [
   {

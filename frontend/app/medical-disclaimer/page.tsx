@@ -1,3 +1,14 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Medical Disclaimer",
+  description:
+    "Read Tayibat's medical disclaimer. Tayibat provides food guidance only and does not replace professional medical care.",
+  alternates: {
+    canonical: "/medical-disclaimer",
+  },
+};
+
 export default function MedicalDisclaimerPage() {
   return (
     <main className="min-h-screen bg-white px-4 py-10 sm:px-6">

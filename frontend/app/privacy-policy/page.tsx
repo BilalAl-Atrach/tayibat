@@ -1,3 +1,14 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Learn how Tayibat handles account information, selected health goals, AI guidance questions, feedback, and payment transaction records.",
+  alternates: {
+    canonical: "/privacy-policy",
+  },
+};
+
 export default function PrivacyPolicyPage() {
   return (
     <main className="min-h-screen bg-white px-4 py-10 sm:px-6">

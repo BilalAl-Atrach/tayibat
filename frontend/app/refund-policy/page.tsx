@@ -1,3 +1,14 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Refund Policy",
+  description:
+    "Review Tayibat's refund policy for Premium access and paid diet plan packages, including support for payment or access issues.",
+  alternates: {
+    canonical: "/refund-policy",
+  },
+};
+
 export default function RefundPolicyPage() {
   return (
     <main className="min-h-screen bg-white px-4 py-10 sm:px-6">

@@ -1,4 +1,14 @@
+import type { Metadata } from "next";
 import { ShoppingBag } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Products",
+  description:
+    "Tayibat products are coming soon. Check back for nutrition-focused products and healthy living resources.",
+  alternates: {
+    canonical: "/products",
+  },
+};
 
 export default function ProductsPage() {
   return (

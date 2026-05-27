@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   Leaf,
   Heart,
@@ -7,6 +8,15 @@ import {
   Sparkles,
   Salad,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "About Us",
+  description:
+    "Learn about Tayibat's mission to provide structured, condition-based nutrition guidance and practical diet planning support.",
+  alternates: {
+    canonical: "/about",
+  },
+};
 
 const values = [
   {
