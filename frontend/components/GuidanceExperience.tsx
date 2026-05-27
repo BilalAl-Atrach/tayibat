@@ -57,7 +57,7 @@ const dietPlanInstructions = {
     "Train 5 days a week for 30–45 minutes.",
     "Avoid food marked as 'avoid' in your selected goal, even if it appears in other general diets.",
     "If a meal causes stomach discomfort, stop and consult a qualified health professional.",
-    "Avoid medicines as much as possible.",
+    
   ],
   ar: [
     "لا تأكل حتى تشعر بالجوع.",
