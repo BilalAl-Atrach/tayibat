@@ -97,7 +97,7 @@ class BillingController extends Controller
             $transaction->delete();
 
             return response()->json([
-                'message' => 'Whish payment is not configured yet. Add the Whish merchant credentials before accepting payments.',
+                'message' => 'Payment is not configured yet. Add the payment provider credentials before accepting payments.',
                 'checkout_url' => null,
                 'whish_configured' => false,
             ], 503);
@@ -107,7 +107,7 @@ class BillingController extends Controller
             $transaction->update(['status' => 'failed']);
 
             return response()->json([
-                'message' => 'Whish did not return a checkout link. Please check the Whish API settings.',
+                'message' => 'The payment provider did not return a checkout link. Please check the payment API settings.',
                 'checkout_url' => null,
                 'whish_configured' => true,
                 'transaction' => [
@@ -123,7 +123,7 @@ class BillingController extends Controller
         }
 
         return response()->json([
-            'message' => 'Redirect the user to Whish to complete payment.',
+            'message' => 'Redirect the user to complete payment.',
             'checkout_url' => $checkout['checkout_url'],
             'whish_configured' => $checkout['configured'],
             'transaction' => [

@@ -391,7 +391,7 @@ export default function GuidanceExperience() {
         return;
       }
 
-      setNotice(data.message || "Payment is not ready yet. Add your Whish credentials in the backend .env file.");
+      setNotice(data.message || "Payment is not ready yet. Please check the payment settings.");
       await loadBillingAccess(true);
     } catch (e) {
       setNotice(getApiMessage(e, "Unable to start payment."));
@@ -702,7 +702,7 @@ export default function GuidanceExperience() {
           title="Unlock the full food tables"
           message={`Free users can see the first 5 rows from each table. Upgrade to Premium for all rows and unlimited AI questions.`}
           price={`$${premiumPrice}`}
-          actionLabel={loading.billing ? "Starting payment..." : "Upgrade with Whish"}
+          actionLabel={loading.billing ? "Starting payment..." : "Upgrade"}
           onAction={() => startCheckout("premium")}
           disabled={loading.billing}
         />
@@ -726,7 +726,7 @@ export default function GuidanceExperience() {
           title="AI limit reached"
           message="Free users can ask 2 AI questions total. Upgrade to Premium for unlimited guidance."
           price={`$${premiumPrice}`}
-          actionLabel={loading.billing ? "Starting payment..." : "Upgrade with Whish"}
+          actionLabel={loading.billing ? "Starting payment..." : "Upgrade"}
           onAction={() => startCheckout("premium")}
           disabled={loading.billing}
         />
@@ -808,7 +808,7 @@ export default function GuidanceExperience() {
           title={`${durationLabels[language][planDuration]} plan package`}
           message={`Diet plans are purchased per health goal. Buy this duration for ${goalName || "the selected goal"} before generating it.`}
           price={`$${selectedPlanPrice}`}
-          actionLabel={loading.billing ? "Starting payment..." : "Buy with Whish"}
+          actionLabel={loading.billing ? "Starting payment..." : "Buy"}
           onAction={() => startCheckout("diet_plan", planDuration)}
           disabled={loading.billing}
         />

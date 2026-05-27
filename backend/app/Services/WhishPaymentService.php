@@ -25,7 +25,7 @@ class WhishPaymentService
                 'provider_reference' => $reference,
                 'checkout_url' => null,
                 'provider_payload' => [
-                    'message' => 'Whish is not configured yet. Add the WHISH_* values in .env.',
+                    'message' => 'Payment is not configured yet. Add the payment provider values in .env.',
                 ],
             ];
         }

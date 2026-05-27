@@ -10,7 +10,7 @@ export default function PaymentSuccessPage() {
         </div>
         <h1 className="mt-5 text-3xl font-bold text-gray-950">Payment successful</h1>
         <p className="mt-3 text-sm leading-6 text-gray-600">
-          Your payment was completed. If Whish has confirmed the payment callback, your Tayibat access is now active.
+          Your payment was completed. If the payment provider has confirmed the payment callback, your Tayibat access is now active.
         </p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
