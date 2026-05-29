@@ -856,18 +856,19 @@ export default function GuidanceExperience() {
           </div>
         </div>
       )}
-      {/* Instructions */}
-      <div className="rounded-2xl border border-stone-200 bg-white p-5">
-        <h3 className="mb-3 font-semibold text-stone-800">{t.instructions}</h3>
-        <ul className={`space-y-2 text-sm leading-relaxed text-stone-600 ${isArabic ? "list-none pr-0" : "list-none pl-0"}`}>
-          {getDietPlanInstructions(selectedCondition?.name, language).map((instr, i) => (
-            <li key={i} className="flex items-start gap-2.5">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-              {instr}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {dietPlan && (
+        <div className="rounded-2xl border border-stone-200 bg-white p-5">
+          <h3 className="mb-3 font-semibold text-stone-800">{t.instructions}</h3>
+          <ul className={`space-y-2 text-sm leading-relaxed text-stone-600 ${isArabic ? "list-none pr-0" : "list-none pl-0"}`}>
+            {getDietPlanInstructions(selectedCondition?.name, language).map((instr, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                {instr}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 

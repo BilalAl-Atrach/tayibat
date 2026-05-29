@@ -170,6 +170,47 @@ const normalizeFoodText = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const greetingMessages = new Set([
+  "hi",
+  "hello",
+  "hey",
+  "good morning",
+  "good afternoon",
+  "good evening",
+  "how are you",
+  "salam",
+  "salaam",
+  "\u0645\u0631\u062d\u0628\u0627",
+  "\u0623\u0647\u0644\u0627",
+  "\u0627\u0647\u0644\u0627",
+  "\u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064a\u0643\u0645",
+]);
+
+const greetingTokens = new Set([
+  "hi",
+  "hello",
+  "hey",
+  "salam",
+  "salaam",
+  "\u0645\u0631\u062d\u0628\u0627",
+  "\u0623\u0647\u0644\u0627",
+  "\u0627\u0647\u0644\u0627",
+]);
+
+const isGreetingMessage = (message: string) => {
+  const normalized = normalizeFoodText(message);
+  if (!normalized) return false;
+  if (greetingMessages.has(normalized)) return true;
+
+  const tokens = normalized.split(" ");
+  return tokens.length <= 3 && tokens.every((token) => greetingTokens.has(token));
+};
+
+const greetingReply = (responseLanguage: "English" | "Arabic") =>
+  responseLanguage === "Arabic"
+    ? "\u0645\u0631\u062d\u0628\u0627\u060c \u064a\u0633\u0639\u062f\u0646\u064a \u0645\u0633\u0627\u0639\u062f\u062a\u0643. \u0627\u0633\u0623\u0644\u0646\u064a \u0639\u0646 \u0623\u064a \u0646\u0648\u0639 \u0645\u0646 \u0627\u0644\u0637\u0639\u0627\u0645\u060c \u0648\u0633\u0623\u0631\u0634\u062f\u0643 \u0628\u0646\u0627\u0621\u064b \u0639\u0644\u0649 \u0647\u062f\u0641\u0643 \u0627\u0644\u0635\u062d\u064a."
+    : "Hi, I am happy to assist you. Ask me about any kind of food, and I will guide you based on your selected health goal.";
+
 const arabicNameAliases: Record<string, string> = {
   avocado: "\u0623\u0641\u0648\u0643\u0627\u062f\u0648",
   banana: "\u0645\u0648\u0632",
@@ -710,6 +751,18 @@ const resolveCategoryContext = (message: string, rules: FoodRule[]) => {
 
 export async function POST(request: Request) {
   try {
+    const body = (await request.json()) as GuidanceAgentRequest;
+    const message = body.message?.trim();
+    const responseLanguage = body.language === "ar" ? "Arabic" : "English";
+
+    if (!message) {
+      return NextResponse.json({ reply: "Please ask a food guidance question." });
+    }
+
+    if (isGreetingMessage(message)) {
+      return NextResponse.json({ reply: greetingReply(responseLanguage) });
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
@@ -717,14 +770,6 @@ export async function POST(request: Request) {
         reply:
           "The AI guidance agent is not configured yet. Add OPENAI_API_KEY to the frontend environment and restart Next.js.",
       });
-    }
-
-    const body = (await request.json()) as GuidanceAgentRequest;
-    const message = body.message?.trim();
-    const responseLanguage = body.language === "ar" ? "Arabic" : "English";
-
-    if (!message) {
-      return NextResponse.json({ reply: "Please ask a food guidance question." });
     }
 
     const authorization = request.headers.get("authorization");
