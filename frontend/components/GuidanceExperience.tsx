@@ -57,7 +57,7 @@ const dietPlanInstructions = {
     "Train 5 days a week for 30–45 minutes.",
     "Avoid food marked as 'avoid' in your selected goal, even if it appears in other general diets.",
     "If a meal causes stomach discomfort, stop and consult a qualified health professional.",
-    
+    "It is not necessary to eat breakfast, lunch, and dinner every day. You may choose breakfast and lunch, breakfast and dinner, or all three meals depending on your appetite and hunger levels. If you prefer eating three meals a day, keep the portions moderate and balanced.",
   ],
   ar: [
     "لا تأكل حتى تشعر بالجوع.",
@@ -66,6 +66,7 @@ const dietPlanInstructions = {
     "تجنب الأطعمة المحددة كأطعمة يجب تجنبها في هدفك الصحي.",
     "إذا سبب لك أي طعام انزعاجاً في المعدة، توقف عنه واستشر مختصاً صحياً.",
     "تجنب الأدوية قدر الإمكان إلا عند الحاجة وتحت إشراف مختص.",
+    "\u0644\u064a\u0633 \u0645\u0646 \u0627\u0644\u0636\u0631\u0648\u0631\u064a \u062a\u0646\u0627\u0648\u0644 \u0648\u062c\u0628\u0627\u062a \u0627\u0644\u0625\u0641\u0637\u0627\u0631 \u0648\u0627\u0644\u063a\u062f\u0627\u0621 \u0648\u0627\u0644\u0639\u0634\u0627\u0621 \u064a\u0648\u0645\u064a\u0627\u064b. \u064a\u0645\u0643\u0646\u0643 \u0627\u0644\u0627\u0643\u062a\u0641\u0627\u0621 \u0628\u0648\u062c\u0628\u062a\u064a\u0646 \u0641\u0642\u0637\u060c \u0645\u062b\u0644 \u0627\u0644\u0625\u0641\u0637\u0627\u0631 \u0648\u0627\u0644\u063a\u062f\u0627\u0621 \u0623\u0648 \u0627\u0644\u0625\u0641\u0637\u0627\u0631 \u0648\u0627\u0644\u0639\u0634\u0627\u0621\u060c \u0648\u0630\u0644\u0643 \u062d\u0633\u0628 \u0645\u0633\u062a\u0648\u0649 \u0627\u0644\u062c\u0648\u0639 \u0648\u0627\u0644\u0634\u0647\u064a\u0629 \u0644\u062f\u064a\u0643. \u0648\u0625\u0630\u0627 \u0643\u0646\u062a \u062a\u0641\u0636\u0644 \u062a\u0646\u0627\u0648\u0644 \u062b\u0644\u0627\u062b \u0648\u062c\u0628\u0627\u062a \u064a\u0648\u0645\u064a\u0627\u064b\u060c \u0641\u0627\u062d\u0631\u0635 \u0639\u0644\u0649 \u0623\u0646 \u062a\u0643\u0648\u0646 \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0645\u0639\u062a\u062f\u0644\u0629 \u0648\u0645\u062a\u0648\u0627\u0632\u0646\u0629.",
   ],
 };
 
@@ -350,6 +351,16 @@ export default function GuidanceExperience() {
     localStorage.setItem("tayibat-guidance-language", next);
   };
 
+  useEffect(() => {
+    if (!notice) return;
+
+    const timer = window.setTimeout(() => {
+      setNotice("");
+    }, 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
   const loadBillingAccess = useCallback(async (force = false) => {
     const authToken = localStorage.getItem("authToken");
     if (!authToken) { setBillingAccess(null); return; }
@@ -499,9 +510,12 @@ export default function GuidanceExperience() {
 
   const handleSelectCondition = async (condition: Condition) => {
     const authToken = localStorage.getItem("authToken");
-    if (!authToken) { setNotice("You must log in to select a goal."); return; }
+    if (!authToken) {
+      setFeedbackNotice(null);
+      setNotice("You must log in to select a goal.");
+      return;
+    }
     setSelectedCondition(condition); setDietPlan(null); setIsPlanOpen(false);
-    setNotice(""); setFeedbackNotice(null);
     localStorage.setItem("selectedCondition", condition.name);
     setActiveTab("foods");
     try { await api.post("/user/condition", { condition: condition.name }); }
@@ -979,9 +993,16 @@ export default function GuidanceExperience() {
 
         {/* ── Global notice ─────────────────────────────────────────────── */}
         {notice && (
-          <div className="mx-auto mt-3 max-w-screen-xl px-4 sm:px-6">
-            <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <span className="shrink-0 text-base">⚠️</span> {notice}
+          <div className="pointer-events-none fixed inset-0 z-[70] flex items-center justify-center px-4">
+            <div
+              role="status"
+              aria-live="polite"
+              className="pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl border border-amber-200 bg-white px-5 py-4 text-center text-sm font-semibold text-stone-900 shadow-2xl shadow-stone-900/20"
+            >
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-700">
+                !
+              </span>
+              <span className="leading-6">{notice}</span>
             </div>
           </div>
         )}
