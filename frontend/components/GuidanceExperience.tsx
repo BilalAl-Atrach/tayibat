@@ -57,7 +57,6 @@ const dietPlanInstructions = {
     "Train 5 days a week for 30–45 minutes.",
     "Avoid food marked as 'avoid' in your selected goal, even if it appears in other general diets.",
     "If a meal causes stomach discomfort, stop and consult a qualified health professional.",
-    "It is not necessary to eat breakfast, lunch, and dinner every day. You may choose breakfast and lunch, breakfast and dinner, or all three meals depending on your appetite and hunger levels. If you prefer eating three meals a day, keep the portions moderate and balanced.",
   ],
   ar: [
     "لا تأكل حتى تشعر بالجوع.",
@@ -66,9 +65,13 @@ const dietPlanInstructions = {
     "تجنب الأطعمة المحددة كأطعمة يجب تجنبها في هدفك الصحي.",
     "إذا سبب لك أي طعام انزعاجاً في المعدة، توقف عنه واستشر مختصاً صحياً.",
     "تجنب الأدوية قدر الإمكان إلا عند الحاجة وتحت إشراف مختص.",
-    "\u0644\u064a\u0633 \u0645\u0646 \u0627\u0644\u0636\u0631\u0648\u0631\u064a \u062a\u0646\u0627\u0648\u0644 \u0648\u062c\u0628\u0627\u062a \u0627\u0644\u0625\u0641\u0637\u0627\u0631 \u0648\u0627\u0644\u063a\u062f\u0627\u0621 \u0648\u0627\u0644\u0639\u0634\u0627\u0621 \u064a\u0648\u0645\u064a\u0627\u064b. \u064a\u0645\u0643\u0646\u0643 \u0627\u0644\u0627\u0643\u062a\u0641\u0627\u0621 \u0628\u0648\u062c\u0628\u062a\u064a\u0646 \u0641\u0642\u0637\u060c \u0645\u062b\u0644 \u0627\u0644\u0625\u0641\u0637\u0627\u0631 \u0648\u0627\u0644\u063a\u062f\u0627\u0621 \u0623\u0648 \u0627\u0644\u0625\u0641\u0637\u0627\u0631 \u0648\u0627\u0644\u0639\u0634\u0627\u0621\u060c \u0648\u0630\u0644\u0643 \u062d\u0633\u0628 \u0645\u0633\u062a\u0648\u0649 \u0627\u0644\u062c\u0648\u0639 \u0648\u0627\u0644\u0634\u0647\u064a\u0629 \u0644\u062f\u064a\u0643. \u0648\u0625\u0630\u0627 \u0643\u0646\u062a \u062a\u0641\u0636\u0644 \u062a\u0646\u0627\u0648\u0644 \u062b\u0644\u0627\u062b \u0648\u062c\u0628\u0627\u062a \u064a\u0648\u0645\u064a\u0627\u064b\u060c \u0641\u0627\u062d\u0631\u0635 \u0639\u0644\u0649 \u0623\u0646 \u062a\u0643\u0648\u0646 \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0645\u0639\u062a\u062f\u0644\u0629 \u0648\u0645\u062a\u0648\u0627\u0632\u0646\u0629.",
   ],
 };
+
+const mealFlexibilityInstruction = {
+  en: "It is not necessary to eat breakfast, lunch, and dinner every day. You may choose breakfast and lunch, breakfast and dinner, or all three meals depending on your appetite and hunger levels. If you prefer eating three meals a day, keep the portions moderate and balanced.",
+  ar: "\u0644\u064a\u0633 \u0645\u0646 \u0627\u0644\u0636\u0631\u0648\u0631\u064a \u062a\u0646\u0627\u0648\u0644 \u0648\u062c\u0628\u0627\u062a \u0627\u0644\u0625\u0641\u0637\u0627\u0631 \u0648\u0627\u0644\u063a\u062f\u0627\u0621 \u0648\u0627\u0644\u0639\u0634\u0627\u0621 \u064a\u0648\u0645\u064a\u0627\u064b. \u064a\u0645\u0643\u0646\u0643 \u0627\u0644\u0627\u0643\u062a\u0641\u0627\u0621 \u0628\u0648\u062c\u0628\u062a\u064a\u0646 \u0641\u0642\u0637\u060c \u0645\u062b\u0644 \u0627\u0644\u0625\u0641\u0637\u0627\u0631 \u0648\u0627\u0644\u063a\u062f\u0627\u0621 \u0623\u0648 \u0627\u0644\u0625\u0641\u0637\u0627\u0631 \u0648\u0627\u0644\u0639\u0634\u0627\u0621\u060c \u0648\u0630\u0644\u0643 \u062d\u0633\u0628 \u0645\u0633\u062a\u0648\u0649 \u0627\u0644\u062c\u0648\u0639 \u0648\u0627\u0644\u0634\u0647\u064a\u0629 \u0644\u062f\u064a\u0643. \u0648\u0625\u0630\u0627 \u0643\u0646\u062a \u062a\u0641\u0636\u0644 \u062a\u0646\u0627\u0648\u0644 \u062b\u0644\u0627\u062b \u0648\u062c\u0628\u0627\u062a \u064a\u0648\u0645\u064a\u0627\u064b\u060c \u0641\u0627\u062d\u0631\u0635 \u0639\u0644\u0649 \u0623\u0646 \u062a\u0643\u0648\u0646 \u0627\u0644\u0643\u0645\u064a\u0627\u062a \u0645\u0639\u062a\u062f\u0644\u0629 \u0648\u0645\u062a\u0648\u0627\u0632\u0646\u0629.",
+} as const;
 
 const conditionDietPlanInstructions = {
   healthy: {
@@ -76,11 +79,13 @@ const conditionDietPlanInstructions = {
       "Read food labels before buying packaged foods.",
       "Prepare healthy meals at home more often.",
       "Focus on the drinks in your diet plan.",
+      mealFlexibilityInstruction.en,
     ],
     ar: [
       "\u0627\u0642\u0631\u0623 \u0645\u0644\u0635\u0642\u0627\u062a \u0627\u0644\u0637\u0639\u0627\u0645 \u0642\u0628\u0644 \u0634\u0631\u0627\u0621 \u0627\u0644\u0623\u0637\u0639\u0645\u0629 \u0627\u0644\u0645\u0639\u0644\u0628\u0629.",
       "\u062d\u0636\u0631 \u0648\u062c\u0628\u0627\u062a \u0635\u062d\u064a\u0629 \u0641\u064a \u0627\u0644\u0645\u0646\u0632\u0644 \u0628\u0634\u0643\u0644 \u0623\u0643\u062b\u0631.",
       "\u0631\u0643\u0632 \u0639\u0644\u0649 \u0627\u0644\u0645\u0634\u0631\u0648\u0628\u0627\u062a \u0627\u0644\u0645\u0648\u062c\u0648\u062f\u0629 \u0641\u064a \u062e\u0637\u0629 \u0646\u0638\u0627\u0645\u0643 \u0627\u0644\u063a\u0630\u0627\u0626\u064a.",
+      mealFlexibilityInstruction.ar,
     ],
   },
   diabetes: {
@@ -90,6 +95,7 @@ const conditionDietPlanInstructions = {
       "Choose whole grain bread and brown rice.",
       "Drink green tea daily — it helps with insulin sensitivity.",
       "Use olive oil as your only cooking fat.",
+      mealFlexibilityInstruction.en,
     ],
     ar: [
       "\u0644\u0627 \u062a\u0623\u0643\u0644 \u0627\u0644\u0643\u0631\u0628\u0648\u0647\u064a\u062f\u0631\u0627\u062a \u0648\u062d\u062f\u0647\u0627\u061b \u0627\u062c\u0645\u0639\u0647\u0627 \u062f\u0627\u0626\u0645\u0627\u064b \u0645\u0639 \u0628\u0631\u0648\u062a\u064a\u0646 \u0623\u0648 \u062f\u0647\u0648\u0646 \u0635\u062d\u064a\u0629 \u0644\u0625\u0628\u0637\u0627\u0621 \u0627\u0645\u062a\u0635\u0627\u0635 \u0627\u0644\u063a\u0644\u0648\u0643\u0648\u0632.",
@@ -97,6 +103,7 @@ const conditionDietPlanInstructions = {
       "\u0627\u062e\u062a\u0631 \u062e\u0628\u0632 \u0627\u0644\u062d\u0628\u0648\u0628 \u0627\u0644\u0643\u0627\u0645\u0644\u0629 \u0648\u0627\u0644\u0623\u0631\u0632 \u0627\u0644\u0628\u0646\u064a.",
       "\u0627\u0634\u0631\u0628 \u0627\u0644\u0634\u0627\u064a \u0627\u0644\u0623\u062e\u0636\u0631 \u064a\u0648\u0645\u064a\u0627\u064b\u061b \u0641\u0647\u0648 \u064a\u0633\u0627\u0639\u062f \u0639\u0644\u0649 \u062d\u0633\u0627\u0633\u064a\u0629 \u0627\u0644\u0623\u0646\u0633\u0648\u0644\u064a\u0646.",
       "\u0627\u0633\u062a\u062e\u062f\u0645 \u0632\u064a\u062a \u0627\u0644\u0632\u064a\u062a\u0648\u0646 \u0643\u062f\u0647\u0646 \u0627\u0644\u0637\u0647\u064a \u0627\u0644\u0648\u062d\u064a\u062f.",
+      mealFlexibilityInstruction.ar,
     ],
   },
   weight: {
@@ -105,23 +112,27 @@ const conditionDietPlanInstructions = {
       "Prioritize protein and fiber-rich foods to support fullness.",
       "Eat slowly.",
       "Make dinner your lightest meal of the day.",
+      mealFlexibilityInstruction.en,
     ],
     ar: [
       "\u0627\u062d\u0633\u0628 \u0627\u0644\u062d\u0635\u0635 \u0648\u0644\u064a\u0633 \u0646\u0648\u0639 \u0627\u0644\u0637\u0639\u0627\u0645 \u0641\u0642\u0637\u061b \u0641\u0627\u0644\u0637\u0639\u0627\u0645 \u0627\u0644\u0635\u062d\u064a \u0628\u0643\u0645\u064a\u0627\u062a \u0643\u0628\u064a\u0631\u0629 \u0642\u062f \u064a\u0633\u0628\u0628 \u0632\u064a\u0627\u062f\u0629 \u0627\u0644\u0648\u0632\u0646.",
       "\u0631\u0643\u0632 \u0639\u0644\u0649 \u0627\u0644\u0628\u0631\u0648\u062a\u064a\u0646 \u0648\u0627\u0644\u0623\u0637\u0639\u0645\u0629 \u0627\u0644\u063a\u0646\u064a\u0629 \u0628\u0627\u0644\u0623\u0644\u064a\u0627\u0641 \u0644\u062f\u0639\u0645 \u0627\u0644\u0634\u0628\u0639.",
       "\u062a\u0646\u0627\u0648\u0644 \u0627\u0644\u0637\u0639\u0627\u0645 \u0628\u0628\u0637\u0621.",
       "\u0627\u062c\u0639\u0644 \u0627\u0644\u0639\u0634\u0627\u0621 \u0623\u062e\u0641 \u0648\u062c\u0628\u0629 \u0641\u064a \u0627\u0644\u064a\u0648\u0645.",
+      mealFlexibilityInstruction.ar,
     ],
   },
   digestive: {
     en: [
       "Eat slowly and stop any meal that causes stomach discomfort.",
       "Avoid spicy or irritating foods, especially if symptoms are active.",
+      mealFlexibilityInstruction.en,
       "Chew your food thoroughly — digestion begins in the mouth.",
     ],
     ar: [
       "\u062a\u0646\u0627\u0648\u0644 \u0627\u0644\u0637\u0639\u0627\u0645 \u0628\u0628\u0637\u0621 \u0648\u062a\u0648\u0642\u0641 \u0639\u0646 \u0623\u064a \u0648\u062c\u0628\u0629 \u062a\u0633\u0628\u0628 \u0627\u0646\u0632\u0639\u0627\u062c\u0627\u064b \u0641\u064a \u0627\u0644\u0645\u0639\u062f\u0629.",
       "\u062a\u062c\u0646\u0628 \u0627\u0644\u0623\u0637\u0639\u0645\u0629 \u0627\u0644\u062d\u0627\u0631\u0629 \u0623\u0648 \u0627\u0644\u0645\u0647\u064a\u062c\u0629\u060c \u062e\u0627\u0635\u0629 \u0639\u0646\u062f \u0648\u062c\u0648\u062f \u0623\u0639\u0631\u0627\u0636.",
+      mealFlexibilityInstruction.ar,
       "\u0627\u0645\u0636\u063a \u0637\u0639\u0627\u0645\u0643 \u062c\u064a\u062f\u0627\u064b\u061b \u0641\u0627\u0644\u0647\u0636\u0645 \u064a\u0628\u062f\u0623 \u0641\u064a \u0627\u0644\u0641\u0645.",
     ],
   },
@@ -131,12 +142,14 @@ const conditionDietPlanInstructions = {
       "Limit saturated fats, fried foods, and heavy cheese-based meals.",
       "Use olive oil as your only fat.",
       "Avoid butter.",
+      mealFlexibilityInstruction.en,
     ],
     ar: [
       "\u0641\u0636\u0644 \u0627\u0644\u0623\u0637\u0639\u0645\u0629 \u0627\u0644\u062a\u064a \u062a\u062d\u062a\u0648\u064a \u0639\u0644\u0649 \u062f\u0647\u0648\u0646 \u0635\u062d\u064a\u0629.",
       "\u0642\u0644\u0644 \u0627\u0644\u062f\u0647\u0648\u0646 \u0627\u0644\u0645\u0634\u0628\u0639\u0629 \u0648\u0627\u0644\u0623\u0637\u0639\u0645\u0629 \u0627\u0644\u0645\u0642\u0644\u064a\u0629 \u0648\u0627\u0644\u0648\u062c\u0628\u0627\u062a \u0627\u0644\u062b\u0642\u064a\u0644\u0629 \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629 \u0639\u0644\u0649 \u0627\u0644\u062c\u0628\u0646.",
       "\u0627\u0633\u062a\u062e\u062f\u0645 \u0632\u064a\u062a \u0627\u0644\u0632\u064a\u062a\u0648\u0646 \u0643\u062f\u0647\u0646\u0643 \u0627\u0644\u0648\u062d\u064a\u062f.",
       "\u062a\u062c\u0646\u0628 \u0627\u0644\u0632\u0628\u062f\u0629.",
+      mealFlexibilityInstruction.ar,
     ],
   },
   cancer: {
@@ -144,11 +157,13 @@ const conditionDietPlanInstructions = {
       "Avoid raw or undercooked foods.",
       "Stop any food that causes discomfort to your stomach.",
       "Focus on the nature drinks on you diet plan.",
+      mealFlexibilityInstruction.en,
     ],
     ar: [
       "\u062a\u062c\u0646\u0628 \u0627\u0644\u0623\u0637\u0639\u0645\u0629 \u0627\u0644\u0646\u064a\u0626\u0629 \u0623\u0648 \u063a\u064a\u0631 \u0627\u0644\u0645\u0637\u0647\u0648\u0629 \u062c\u064a\u062f\u0627\u064b.",
       "\u062a\u0648\u0642\u0641 \u0639\u0646 \u0623\u064a \u0637\u0639\u0627\u0645 \u064a\u0633\u0628\u0628 \u0627\u0646\u0632\u0639\u0627\u062c\u0627\u064b \u0644\u0645\u0639\u062f\u062a\u0643.",
       "\u0631\u0643\u0632 \u0639\u0644\u0649 \u0627\u0644\u0645\u0634\u0631\u0648\u0628\u0627\u062a \u0627\u0644\u0637\u0628\u064a\u0639\u064a\u0629 \u0641\u064a \u062e\u0637\u0629 \u0646\u0638\u0627\u0645\u0643 \u0627\u0644\u063a\u0630\u0627\u0626\u064a.",
+      mealFlexibilityInstruction.ar,
     ],
   },
 } as const;
@@ -856,19 +871,17 @@ export default function GuidanceExperience() {
           </div>
         </div>
       )}
-      {dietPlan && (
-        <div className="rounded-2xl border border-stone-200 bg-white p-5">
-          <h3 className="mb-3 font-semibold text-stone-800">{t.instructions}</h3>
-          <ul className={`space-y-2 text-sm leading-relaxed text-stone-600 ${isArabic ? "list-none pr-0" : "list-none pl-0"}`}>
-            {getDietPlanInstructions(selectedCondition?.name, language).map((instr, i) => (
-              <li key={i} className="flex items-start gap-2.5">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                {instr}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <div className="rounded-2xl border border-stone-200 bg-white p-5">
+        <h3 className="mb-3 font-semibold text-stone-800">{t.instructions}</h3>
+        <ul className={`space-y-2 text-sm leading-relaxed text-stone-600 ${isArabic ? "list-none pr-0" : "list-none pl-0"}`}>
+          {getDietPlanInstructions(selectedCondition?.name, language).map((instr, i) => (
+            <li key={i} className="flex items-start gap-2.5">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+              {instr}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 
