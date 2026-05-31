@@ -78,6 +78,12 @@ const fastingInstruction = {
   ar: "\u064a\u062c\u0628 \u0623\u0646 \u062a\u062d\u0627\u0648\u0644 \u0627\u0644\u0635\u064a\u0627\u0645 \u064a\u0648\u0645\u064a\u0646 \u0641\u064a \u0627\u0644\u0623\u0633\u0628\u0648\u0639.",
 } as const;
 
+const isMealFlexibilityInstruction = (instruction: string, language: GuidanceLanguage) =>
+  instruction === mealFlexibilityInstruction[language];
+
+const importantInstructionLabel = (language: GuidanceLanguage) =>
+  language === "ar" ? "\u0645\u0647\u0645" : "Important";
+
 const conditionDietPlanInstructions = {
   healthy: {
     en: [
@@ -591,7 +597,13 @@ export default function GuidanceExperience() {
     if (!pw) { setNotice("Allow pop-ups to download the PDF."); return; }
     const condName = localizedConditionName(selectedCondition, language) || dietPlan.condition || "Diet plan";
     const instructionsMarkup = getDietPlanInstructions(selectedCondition?.name || dietPlan.condition, language)
-      .map((i) => `<li>${escapeHtml(i)}</li>`)
+      .map((i) => {
+        const important = isMealFlexibilityInstruction(i, language);
+
+        return important
+          ? `<li class="important-instruction"><strong>${escapeHtml(importantInstructionLabel(language))}</strong><span>${escapeHtml(i)}</span></li>`
+          : `<li>${escapeHtml(i)}</li>`;
+      })
       .join("");
     const daysMarkup = dietPlan.plan.map((day) => `
       <section class="day">
@@ -609,7 +621,9 @@ export default function GuidanceExperience() {
       .day{break-inside:avoid;margin-bottom:20px}h2{font-size:17px;color:#166534;margin:0 0 8px}
       table{border-collapse:collapse;width:100%}th,td{border:1px solid #d1d5db;padding:9px;text-align:${isArabic?"right":"left"}}
       th{background:#f0fdf4;color:#166534}.instructions{border:1px solid #bbf7d0;background:#f0fdf4;padding:18px;margin-top:28px}
-      .instructions h2{margin-bottom:10px}li{margin-bottom:6px;color:#374151}</style></head>
+      .instructions h2{margin-bottom:10px}li{margin-bottom:6px;color:#374151}
+      .important-instruction{list-style:none;border:1px solid #f59e0b;background:#fffbeb;padding:10px 12px;margin:8px 0;color:#78350f}
+      .important-instruction strong{display:inline-block;margin-inline-end:8px;color:#92400e}</style></head>
       <body><header style="border-bottom:2px solid #16a34a;margin-bottom:24px;padding-bottom:14px">
       <h1>${escapeHtml(condName)} — ${escapeHtml(t.generatedPlan)}</h1>
       <p style="color:#6b7280">${escapeHtml(durationLabels[language][dietPlan.duration || planDuration] || planDuration)}</p>
@@ -891,12 +905,30 @@ export default function GuidanceExperience() {
       <div className="rounded-2xl border border-stone-200 bg-white p-5">
         <h3 className="mb-3 font-semibold text-stone-800">{t.instructions}</h3>
         <ul className={`space-y-2 text-sm leading-relaxed text-stone-600 ${isArabic ? "list-none pr-0" : "list-none pl-0"}`}>
-          {getDietPlanInstructions(selectedCondition?.name, language).map((instr, i) => (
-            <li key={i} className="flex items-start gap-2.5">
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-              {instr}
+          {getDietPlanInstructions(selectedCondition?.name, language).map((instr, i) => {
+            const important = isMealFlexibilityInstruction(instr, language);
+
+            return (
+            <li
+              key={i}
+              className={`flex items-start gap-3 rounded-xl px-3 py-2.5 ${
+                important
+                  ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm"
+                  : "text-stone-600"
+              }`}
+            >
+              <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${important ? "bg-amber-500" : "bg-emerald-400"}`} />
+              <span>
+                {important && (
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-amber-700">
+                    {importantInstructionLabel(language)}
+                  </span>
+                )}
+                {instr}
+              </span>
             </li>
-          ))}
+          );
+          })}
         </ul>
       </div>
     </div>
@@ -1340,12 +1372,30 @@ function PlanViewer({
           <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
             <h3 className="font-display font-bold text-emerald-900">{t.instructions}</h3>
             <ul className="mt-3 space-y-2">
-              {instructions.map((instr, i) => (
-                <li key={i} className="flex items-start gap-2.5 text-sm text-stone-700">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                  {instr}
+              {instructions.map((instr, i) => {
+                const important = isMealFlexibilityInstruction(instr, language);
+
+                return (
+                <li
+                  key={i}
+                  className={`flex items-start gap-3 rounded-xl px-3 py-2.5 text-sm ${
+                    important
+                      ? "border border-amber-200 bg-amber-50 text-amber-950 shadow-sm"
+                      : "text-stone-700"
+                  }`}
+                >
+                  <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${important ? "bg-amber-500" : "bg-emerald-400"}`} />
+                  <span>
+                    {important && (
+                      <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-amber-700">
+                        {importantInstructionLabel(language)}
+                      </span>
+                    )}
+                    {instr}
+                  </span>
                 </li>
-              ))}
+              );
+              })}
             </ul>
           </div>
         </div>
