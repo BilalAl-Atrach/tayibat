@@ -460,7 +460,7 @@ const foodCategoryMap: Record<string, string[]> = {
     "smeds cheese",
     "جبنة مطبوخة",
   ],
-  legumes: ["bean", "beans", "chickpea", "lentil", "pea", "peas","lentils", "بقوليات", "فاصوليا", "حمص", "عدس", "بازلاء"],
+  legumes: ["bean", "beans","peanut butter", "chickpea", "lentil", "pea", "peas","lentils","زبدة الفول السوداني", "بقوليات", "فاصوليا", "حمص", "عدس", "بازلاء"],
   nuts: ["almond","almonds", "cashew", "cashews", "peanut", "peanuts", "pistachio", "walnut","walnuts", "مكسرات", "لوز", "كاجو", "فول سوداني", "فستق", "جوز"],
 };
 
