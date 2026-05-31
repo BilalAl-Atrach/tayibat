@@ -10,6 +10,7 @@ use App\Models\DietPlanPurchase;
 use App\Models\Food;
 use App\Models\GlobalRules;
 use App\Models\User;
+use App\Support\RiceGuidance;
 
 class NutritionController extends Controller
 {
@@ -34,6 +35,17 @@ public function ask(Request $request)
     $conditionId = $condition?->id;
     $conditionName = $condition?->name ?? $request->condition;
     $question = "Can I eat {$foodName}?";
+
+    $riceGuidance = RiceGuidance::for($conditionName, $foodName, $request->input('question', $question));
+
+    if ($riceGuidance) {
+        return response()->json([
+            'status'              => $riceGuidance['status'],
+            'message'             => $riceGuidance['message'],
+            'reason'              => $riceGuidance['reason'],
+            'max_servings'        => null,
+        ]);
+    }
 
     // 1. Try to find a Condition-Specific Rule
     $rule = DietaryRule::whereHas('food', function ($q) use ($foodName) {
@@ -79,7 +91,7 @@ public function ask(Request $request)
         return response()->json([
             'status'              => $aiResponse['status'] ?? 'ai',
             'message'             => $aiResponse['message'] ?? 'No answer',
-            'reason'              => 'No dietary rule found for this food.',
+            'reason'              => $aiResponse['reason'] ?? 'No dietary rule found for this food.',
             'max_servings'        => null,
         ]);
     }

@@ -6,6 +6,7 @@ use App\Models\DietaryRule;
 use App\Models\Condition;
 use App\Models\Food;
 use App\Models\GlobalRules;   // ✅ new model
+use App\Support\RiceGuidance;
 use Illuminate\Support\Facades\Http;
 
 class NutritionAIService
@@ -21,6 +22,12 @@ class NutritionAIService
     {
         $food = strtolower(trim($food));
         $question = $question ?: "Can I eat {$food}?";
+
+        $riceGuidance = RiceGuidance::for($user->condition ?? null, $food, $question);
+
+        if ($riceGuidance) {
+            return $riceGuidance;
+        }
 
         // Find food record
         $foodModel = Food::where('name', $food)->first();
