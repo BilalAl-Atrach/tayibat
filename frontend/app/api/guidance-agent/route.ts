@@ -296,6 +296,23 @@ const resolveRiceGuidanceAnswer = (
     : "All rice types are allowed.";
 };
 
+const resolveFishGuidanceAnswer = (message: string, responseLanguage: "English" | "Arabic") => {
+  const normalizedMessage = ` ${normalizeFoodText(message)} `;
+  const isFishQuestion =
+    normalizedMessage.includes(" fish ") ||
+    normalizedMessage.includes(" fishes ") ||
+    normalizedMessage.includes(" seafood ") ||
+    normalizedMessage.includes(" \u0633\u0645\u0643 ") ||
+    normalizedMessage.includes(" \u0627\u0633\u0645\u0627\u0643 ") ||
+    normalizedMessage.includes(" \u0623\u0633\u0645\u0627\u0643 ");
+
+  if (!isFishQuestion) return null;
+
+  return responseLanguage === "Arabic"
+    ? "\u062c\u0645\u064a\u0639 \u0623\u0646\u0648\u0627\u0639 \u0627\u0644\u0633\u0645\u0643 \u0645\u0633\u0645\u0648\u062d\u0629."
+    : "All kinds of fish are allowed.";
+};
+
 const cleanGuidanceReply = (reply: string) =>
   reply
     .replace(/\s*Recommendation:\s*Ask the Tayibat team\/admin to add this food\.?/gi, "")
@@ -776,6 +793,12 @@ export async function POST(request: Request) {
 
     if (riceGuidanceAnswer) {
       return NextResponse.json({ reply: riceGuidanceAnswer });
+    }
+
+    const fishGuidanceAnswer = resolveFishGuidanceAnswer(message, responseLanguage);
+
+    if (fishGuidanceAnswer) {
+      return NextResponse.json({ reply: fishGuidanceAnswer });
     }
 
     const billingAccess = await fetchBillingAccess(authorization);
