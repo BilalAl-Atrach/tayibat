@@ -207,8 +207,13 @@ const getConditionInstructionKey = (conditionName?: string | null) => {
 const getDietPlanInstructions = (conditionName: string | null | undefined, language: GuidanceLanguage) => {
   const conditionKey = getConditionInstructionKey(conditionName);
   const conditionInstructions = conditionKey ? conditionDietPlanInstructions[conditionKey][language] : [];
+  const instructions = [...dietPlanInstructions[language], ...conditionInstructions];
+  const mealInstruction = mealFlexibilityInstruction[language];
+  const hasMealInstruction = instructions.includes(mealInstruction);
 
-  return [...dietPlanInstructions[language], ...conditionInstructions];
+  return hasMealInstruction
+    ? [mealInstruction, ...instructions.filter((instruction) => instruction !== mealInstruction)]
+    : instructions;
 };
 
 const uiText = {
