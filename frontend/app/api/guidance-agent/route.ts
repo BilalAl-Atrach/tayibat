@@ -264,11 +264,44 @@ const resolveArabicNameAnswer = (message: string, responseLanguage: "English" | 
   return `${matchedName} in Arabic is: ${arabicName}`;
 };
 
+const resolveRiceGuidanceAnswer = (
+  message: string,
+  conditionName: string,
+  responseLanguage: "English" | "Arabic"
+) => {
+  const normalizedMessage = ` ${normalizeFoodText(message)} `;
+  const isRiceQuestion =
+    normalizedMessage.includes(" rice ") ||
+    normalizedMessage.includes(" \u0623\u0631\u0632 ") ||
+    normalizedMessage.includes(" \u0627\u0631\u0632 ") ||
+    normalizedMessage.includes(" \u0631\u0632 ");
+
+  if (!isRiceQuestion) return null;
+
+  const normalizedCondition = normalizeFoodText(conditionName);
+  const hasDiabetes =
+    normalizedCondition.includes("diabetes") ||
+    normalizedCondition.includes("diabetic") ||
+    normalizedCondition.includes("\u0627\u0644\u0633\u0643\u0631\u064a") ||
+    normalizedCondition.includes("\u0633\u0643\u0631\u064a");
+
+  if (responseLanguage === "Arabic") {
+    return hasDiabetes
+      ? "\u0628\u0627\u0644\u0646\u0633\u0628\u0629 \u0644\u0644\u0623\u0631\u0632\u060c \u064a\u0645\u0643\u0646\u0643 \u062a\u0646\u0627\u0648\u0644 \u0627\u0644\u0623\u0631\u0632 \u0627\u0644\u0628\u0646\u064a \u0641\u0642\u0637."
+      : "\u062c\u0645\u064a\u0639 \u0623\u0646\u0648\u0627\u0639 \u0627\u0644\u0623\u0631\u0632 \u0645\u0633\u0645\u0648\u062d\u0629.";
+  }
+
+  return hasDiabetes
+    ? "For rice, you can eat only brown rice."
+    : "All rice types are allowed.";
+};
+
 const cleanGuidanceReply = (reply: string) =>
   reply
     .replace(/\s*Recommendation:\s*Ask the Tayibat team\/admin to add this food\.?/gi, "")
     .replace(/\s*Recommendation:\s*Ask the Tayibat team to add this food\.?/gi, "")
     .replace(/\s*Recommendation:\s*Ask the admin to add this food\.?/gi, "")
+    .replace(/\s*Safety note:\s*[^\n]*(?:\n|$)/gi, "\n")
     .replace(/\s{2,}/g, " ")
     .trim();
 
@@ -289,29 +322,17 @@ const treatmentQuestionWords = [
   "تشخيص",
 ];
 
-const getSafetyNote = (conditionName: string, responseLanguage: "English" | "Arabic") => {
-  const condition = normalizeFoodText(conditionName);
-
-  if (responseLanguage === "Arabic") {
-    return "\u0647\u0630\u0647 \u0625\u0631\u0634\u0627\u062f\u0627\u062a \u063a\u0630\u0627\u0626\u064a\u0629 \u0648\u0644\u064a\u0633\u062a \u0628\u062f\u064a\u0644\u0627\u064b \u0639\u0646 \u0627\u0644\u0631\u0639\u0627\u064a\u0629 \u0627\u0644\u0637\u0628\u064a\u0629.";
-  }
-  else
-     return "This is dietary guidance, not medical care.";
-};
-
 const resolveSafetyContext = (
   message: string,
-  conditionName: string,
-  responseLanguage: "English" | "Arabic"
+  conditionName: string
 ) => {
   const normalizedMessage = ` ${normalizeFoodText(message)} `;
   const asksForTreatment = treatmentQuestionWords.some((word) =>
     normalizedMessage.includes(` ${normalizeFoodText(word)} `)
   );
-  const safetyNote = getSafetyNote(conditionName, responseLanguage);
 
   return [
-    `Condition safety note to include when relevant: ${safetyNote}`,
+    `Selected health goal for safety context: ${conditionName}.`,
     asksForTreatment
       ? "The user may be asking for diagnosis, treatment, cure, medicine, or replacing medical care. Refuse that part and say Tayibat provides food guidance only, not diagnosis or treatment."
       : "No treatment/medicine request detected.",
@@ -751,6 +772,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply: arabicNameAnswer });
     }
 
+    const riceGuidanceAnswer = resolveRiceGuidanceAnswer(message, conditionName, responseLanguage);
+
+    if (riceGuidanceAnswer) {
+      return NextResponse.json({ reply: riceGuidanceAnswer });
+    }
+
     const billingAccess = await fetchBillingAccess(authorization);
     const limitResponse = aiLimitResponse(billingAccess);
 
@@ -765,7 +792,7 @@ export async function POST(request: Request) {
     const fullFoodRuleContext = await lookupFullFoodRuleContext(message, conditionName, authorization);
     const categoryListContext = resolveCategoryListContext(message, rules, responseLanguage, hasPremiumAccess);
     const categoryContext = resolveCategoryContext(message, rules);
-    const safetyContext = resolveSafetyContext(message, conditionName, responseLanguage);
+    const safetyContext = resolveSafetyContext(message, conditionName);
 
     if (!rulesContext) {
       return NextResponse.json({
@@ -791,13 +818,13 @@ export async function POST(request: Request) {
           "If the full backend food-rule lookup has a match, use it even when the visible table rows do not include that food.",
           "If a category-array list request is present, list the array items first, then provide the category status and reason from the backend rule.",
           "If a category-array list request has no status/reason because the user is not Premium, say: However, since you are not having the premium, you cannot access the status and reason for this category.",
-          "When using that Premium note, do not add Status, Reason, Recommendation, or Safety note lines.",
+          "When using that Premium note, do not add Status, Reason, or Recommendation lines.",
           "Use the category-array match when it is present. For example, if broccoli belongs to vegetables and vegetables is avoid, broccoli is also avoid.",
           "Answer in the requested response language.",
           "Always use a structured answer, not a paragraph, unless you are only asking the user to select a goal.",
-          "For a specific food question in English, use exactly these labels on separate lines: Status: Allowed/Moderate/Avoid/Not available. Reason: backend reason or missing-rule reason. Recommendation: one short practical sentence. Safety note: the condition safety note.",
-          "For a specific food question in Arabic, use Arabic labels equivalent to: Status, Reason, Recommendation, Safety note. Keep the same four-line structure.",
-          "For category-list requests, list the foods first, then use Status, Reason, Recommendation, and Safety note lines when those details are available.",
+          "For a specific food question in English, use exactly these labels on separate lines: Status: Allowed/Moderate/Avoid/Not available. Reason: backend reason or missing-rule reason. Recommendation: one short practical sentence.",
+          "For a specific food question in Arabic, use Arabic labels equivalent to: Status, Reason, Recommendation. Keep the same three-line structure.",
+          "For category-list requests, list the foods first, then use Status, Reason, and Recommendation lines when those details are available.",
           "If no direct food rule or category rule exists, answer only with: Status: Not available. Reason: This food is not available in Tayibat rules yet.",
           "For not-available foods, do not include any Recommendation line and never tell the user to ask Tayibat/admin/team to add the food.",
           "If max servings are missing, do not invent servings. If needed, say no serving amount is set in Tayibat rules.",
