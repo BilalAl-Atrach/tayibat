@@ -339,12 +339,24 @@ const cheeseAllowedItems = {
 
 const cheeseNotAllowedItems = {
   English: [
+    "cream",
+    "greek yogurt",
     "halloum cheese",
     "uncooked cheese",
+    "labne",
+    "milk",
+    "milk cans",
+    "yogurt",
   ],
   Arabic: [
+    "قشطة",
+    "زبادي يوناني",
     "جبنة حلوم",
     "جبنة غير مطبوخة",
+    "لبنة",
+    "حليب",
+    "علب حليب",
+    "زبادي",
   ],
 };
 
@@ -395,12 +407,12 @@ const resolveCheeseGuidanceAnswer = (message: string, responseLanguage: "English
 
   if (responseLanguage === "Arabic") {
     return asksForNotAllowed
-      ? `الأجبان غير المسموحة هي: ${list}.`
+      ? `منتجات الألبان ما عدا الجبنة المطبوخة هي: ${list}.`
       : `الأجبان المسموحة هي الأجبان المطبوخة: ${list}.`;
   }
 
   return asksForNotAllowed
-    ? `The cheeses not allowed are: ${list}.`
+    ? `Dairy products except cooked cheese are: ${list}.`
     : `The allowed cheeses are cooked cheeses: ${list}.`;
 };
 
