@@ -170,6 +170,13 @@ const normalizeFoodText = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const hasArabicText = (value: string) => /[\u0600-\u06FF]/.test(value);
+
+const resolveReplyLanguage = (
+  message: string,
+  responseLanguage: "English" | "Arabic"
+) => (hasArabicText(message) ? "Arabic" : responseLanguage);
+
 const greetingMessages = new Set([
   "hi",
   "hello",
@@ -863,19 +870,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply: arabicNameAnswer });
     }
 
-    const riceGuidanceAnswer = resolveRiceGuidanceAnswer(message, conditionName, responseLanguage);
+    const directReplyLanguage = resolveReplyLanguage(message, responseLanguage);
+    const riceGuidanceAnswer = resolveRiceGuidanceAnswer(message, conditionName, directReplyLanguage);
 
     if (riceGuidanceAnswer) {
       return NextResponse.json({ reply: riceGuidanceAnswer });
     }
 
-    const fishGuidanceAnswer = resolveFishGuidanceAnswer(message, responseLanguage);
+    const fishGuidanceAnswer = resolveFishGuidanceAnswer(message, directReplyLanguage);
 
     if (fishGuidanceAnswer) {
       return NextResponse.json({ reply: fishGuidanceAnswer });
     }
 
-    const cheeseGuidanceAnswer = resolveCheeseGuidanceAnswer(message, responseLanguage);
+    const cheeseGuidanceAnswer = resolveCheeseGuidanceAnswer(message, directReplyLanguage);
 
     if (cheeseGuidanceAnswer) {
       return NextResponse.json({ reply: cheeseGuidanceAnswer });
