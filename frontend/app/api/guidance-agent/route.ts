@@ -376,6 +376,8 @@ const resolveCheeseGuidanceAnswer = (message: string, responseLanguage: "English
     normalizedMessage.includes(" ممنوع ") ||
     normalizedMessage.includes(" الممنوع ") ||
     normalizedMessage.includes(" تجنب ") ||
+    normalizedMessage.includes(" لا يمكنني ") ||
+    normalizedMessage.includes(" لا يجب ") ||
     normalizedMessage.includes(" لا يمكن ");
 
   const items = asksForNotAllowed
