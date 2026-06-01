@@ -369,10 +369,16 @@ const resolveCheeseGuidanceAnswer = (message: string, responseLanguage: "English
     normalizedMessage.includes(" unallowed ") ||
     normalizedMessage.includes(" forbidden ") ||
     normalizedMessage.includes(" avoid ") ||
+    normalizedMessage.includes(" uncooked ") ||
+    normalizedMessage.includes(" raw cheese ") ||
     normalizedMessage.includes(" cannot eat ") ||
     normalizedMessage.includes(" can't eat ") ||
     normalizedMessage.includes(" غير مسموح ") ||
     normalizedMessage.includes(" غير المسموح ") ||
+    normalizedMessage.includes(" غير مطبوخة ") ||
+    normalizedMessage.includes(" الغير مطبوخة ") ||
+    normalizedMessage.includes(" غير مطبوخ ") ||
+    normalizedMessage.includes(" الغير مطبوخ ") ||
     normalizedMessage.includes(" ممنوع ") ||
     normalizedMessage.includes(" الممنوع ") ||
     normalizedMessage.includes(" تجنب ") ||
