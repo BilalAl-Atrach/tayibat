@@ -313,6 +313,80 @@ const resolveFishGuidanceAnswer = (message: string, responseLanguage: "English" 
     : "All kinds of fish are allowed.";
 };
 
+const cheeseAllowedItems = {
+  English: [
+    "cheddar cheese",
+    "ghazal cheese",
+    "kashkaval cheese",
+    "la vache qui rit",
+    "mozzarella",
+    "smeds cheese",
+  ],
+  Arabic: [
+    "جبنة شيدر",
+    "جبنة قشقوان",
+    "موزاريلا",
+    "جبنة مطبوخة",
+  ],
+};
+
+const cheeseNotAllowedItems = {
+  English: [
+    "halloum cheese",
+    "uncooked cheese",
+  ],
+  Arabic: [
+    "جبنة حلوم",
+    "جبنة غير مطبوخة",
+  ],
+};
+
+const resolveCheeseGuidanceAnswer = (message: string, responseLanguage: "English" | "Arabic") => {
+  const normalizedMessage = ` ${normalizeFoodText(message)} `;
+  const isCheeseQuestion =
+    normalizedMessage.includes(" cheese ") ||
+    normalizedMessage.includes(" cheeses ") ||
+    normalizedMessage.includes(" جبنة ") ||
+    normalizedMessage.includes(" الجبنة ") ||
+    normalizedMessage.includes(" جبن ") ||
+    normalizedMessage.includes(" الجبن ") ||
+    normalizedMessage.includes(" أجبان ") ||
+    normalizedMessage.includes(" الأجبان ") ||
+    normalizedMessage.includes(" اجبان ") ||
+    normalizedMessage.includes(" الاجبان ");
+
+  if (!isCheeseQuestion) return null;
+
+  const asksForNotAllowed =
+    normalizedMessage.includes(" not allowed ") ||
+    normalizedMessage.includes(" unallowed ") ||
+    normalizedMessage.includes(" forbidden ") ||
+    normalizedMessage.includes(" avoid ") ||
+    normalizedMessage.includes(" cannot eat ") ||
+    normalizedMessage.includes(" can't eat ") ||
+    normalizedMessage.includes(" غير مسموح ") ||
+    normalizedMessage.includes(" غير المسموح ") ||
+    normalizedMessage.includes(" ممنوع ") ||
+    normalizedMessage.includes(" الممنوع ") ||
+    normalizedMessage.includes(" تجنب ") ||
+    normalizedMessage.includes(" لا يمكن ");
+
+  const items = asksForNotAllowed
+    ? cheeseNotAllowedItems[responseLanguage]
+    : cheeseAllowedItems[responseLanguage];
+  const list = items.join(responseLanguage === "Arabic" ? "، " : ", ");
+
+  if (responseLanguage === "Arabic") {
+    return asksForNotAllowed
+      ? `الأجبان غير المسموحة هي: ${list}.`
+      : `الأجبان المسموحة هي الأجبان المطبوخة: ${list}.`;
+  }
+
+  return asksForNotAllowed
+    ? `The cheeses not allowed are: ${list}.`
+    : `The allowed cheeses are cooked cheeses: ${list}.`;
+};
+
 const cleanGuidanceReply = (reply: string) =>
   reply
     .replace(/\s*Recommendation:\s*Ask the Tayibat team\/admin to add this food\.?/gi, "")
@@ -799,6 +873,12 @@ export async function POST(request: Request) {
 
     if (fishGuidanceAnswer) {
       return NextResponse.json({ reply: fishGuidanceAnswer });
+    }
+
+    const cheeseGuidanceAnswer = resolveCheeseGuidanceAnswer(message, responseLanguage);
+
+    if (cheeseGuidanceAnswer) {
+      return NextResponse.json({ reply: cheeseGuidanceAnswer });
     }
 
     const billingAccess = await fetchBillingAccess(authorization);
