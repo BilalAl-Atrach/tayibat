@@ -376,8 +376,10 @@ const resolveCheeseGuidanceAnswer = (message: string, responseLanguage: "English
     normalizedMessage.includes(" غير مسموح ") ||
     normalizedMessage.includes(" غير المسموح ") ||
     normalizedMessage.includes(" غير مطبوخة ") ||
+    normalizedMessage.includes(" غير المطبوخة ") ||
     normalizedMessage.includes(" الغير مطبوخة ") ||
     normalizedMessage.includes(" غير مطبوخ ") ||
+    normalizedMessage.includes(" غير المطبوخ ") ||
     normalizedMessage.includes(" الغير مطبوخ ") ||
     normalizedMessage.includes(" ممنوع ") ||
     normalizedMessage.includes(" الممنوع ") ||
