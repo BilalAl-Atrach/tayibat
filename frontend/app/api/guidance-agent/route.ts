@@ -540,6 +540,9 @@ const cleanGuidanceReply = (reply: string) =>
     .replace(/\s*Recommendation:\s*Ask the Tayibat team to add this food\.?/gi, "")
     .replace(/\s*Recommendation:\s*Ask the admin to add this food\.?/gi, "")
     .replace(/\s*Safety note:\s*[^\n]*(?:\n|$)/gi, "\n")
+    .replace(/\s+(Reason:)/gi, ", $1")
+    .replace(/\s+(Recommendation:)/gi, ", $1")
+    .replace(/,\s*,/g, ",")
     .replace(/\s{2,}/g, " ")
     .trim();
 
@@ -1103,7 +1106,7 @@ export async function POST(request: Request) {
           "If recent food logs are relevant, use them for next-meal guidance.",
           "If the user asks to modify a saved plan, explain the change briefly and suggest using the plan tools when an exact saved-plan edit is needed.",
           "Always use a structured answer, not a paragraph, unless you are only asking the user to select a goal.",
-          "For a specific food question in English, use exactly these labels on separate lines: Status: Allowed/Moderate/Avoid/Not available. Reason: backend reason or missing-rule reason. Recommendation: one short practical sentence.",
+          "For a specific food question in English, use exactly this comma-separated format: Status: Allowed/Moderate/Avoid/Not available, Reason: backend reason or missing-rule reason, Recommendation: one short practical sentence.",
           "For a specific food question in Arabic, use Arabic labels equivalent to: Status, Reason, Recommendation. Keep the same three-line structure.",
           "For category-list requests, list the foods first, then use Status, Reason, and Recommendation lines when those details are available.",
           "If no direct food rule or category rule exists, answer only with: Status: Not available. Reason: This food is not available in Tayibat rules yet.",
