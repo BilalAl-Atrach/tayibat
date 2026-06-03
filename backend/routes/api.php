@@ -10,7 +10,6 @@ use App\Http\Controllers\AdminNutritionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\GuidanceFeedbackController;
-use App\Http\Controllers\AssistantController;
 
 Route::get('/conditions', [NutritionController::class, 'getConditions']);
 Route::post('/ask', [NutritionController::class, 'ask']);
@@ -25,13 +24,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/condition', [UserController::class, 'updateCondition']);
     Route::post('/guidance-feedback', [GuidanceFeedbackController::class, 'store']);
     Route::post('/diet-plan', [NutritionController::class, 'dietPlan']);
-    Route::get('/assistant/dashboard', [AssistantController::class, 'dashboard']);
-    Route::put('/assistant/profile', [AssistantController::class, 'updateProfile']);
-    Route::post('/assistant/food-logs', [AssistantController::class, 'storeFoodLog']);
-    Route::post('/assistant/plans', [AssistantController::class, 'savePlan']);
-    Route::post('/assistant/plans/edit', [AssistantController::class, 'editPlan']);
-    Route::post('/assistant/shopping-list', [AssistantController::class, 'shoppingList']);
-    Route::patch('/assistant/reminders/{reminder}', [AssistantController::class, 'updateReminder']);
     Route::get('/rules/{condition}/lookup-food', [DietaryRuleController::class, 'lookupFoodRule']);
     Route::get('/billing/access', [BillingController::class, 'access']);
     Route::get('/billing/history', [BillingController::class, 'history']);
