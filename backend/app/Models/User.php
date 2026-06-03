@@ -69,4 +69,24 @@ class User extends Authenticatable
     {
         return $this->hasMany(DietPlanPurchase::class);
     }
+
+    public function nutritionProfile()
+    {
+        return $this->hasOne(UserNutritionProfile::class);
+    }
+
+    public function foodLogs()
+    {
+        return $this->hasMany(UserFoodLog::class);
+    }
+
+    public function savedDietPlans()
+    {
+        return $this->hasMany(SavedDietPlan::class);
+    }
+
+    public function reminders()
+    {
+        return $this->hasMany(UserReminder::class);
+    }
 }

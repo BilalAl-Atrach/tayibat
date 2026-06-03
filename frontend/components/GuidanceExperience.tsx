@@ -43,6 +43,42 @@ interface BillingAccess {
   };
   diet_plan_access: Record<string, boolean>;
 }
+interface NutritionProfile {
+  allergies?: string[] | null;
+  disliked_foods?: string[] | null;
+  preferred_foods?: string[] | null;
+  meal_count_preference?: string | null;
+  fasting_days_per_week?: number | null;
+  budget_level?: string | null;
+  language_preference?: GuidanceLanguage | null;
+  notes?: string | null;
+}
+interface FoodLog {
+  id: number;
+  food_name: string;
+  meal_type?: string | null;
+  logged_at?: string | null;
+  notes?: string | null;
+}
+interface AssistantReminder {
+  id: number;
+  title: string;
+  frequency?: string | null;
+  enabled: boolean;
+}
+interface AssistantDashboard {
+  profile: NutritionProfile;
+  recent_logs: FoodLog[];
+  reminders: AssistantReminder[];
+}
+interface ShoppingList {
+  proteins: string[];
+  vegetables: string[];
+  drinks: string[];
+  fats: string[];
+  grains_and_sides: string[];
+  other: string[];
+}
 type GuidanceLanguage = "en" | "ar";
 type ActiveTab = "goals" | "foods" | "chat" | "plan" | "feedback";
 
@@ -338,6 +374,9 @@ const translateDayLabel = (day: PlanDay, lang: GuidanceLanguage) =>
   lang === "ar" ? `اليوم ${day.day}` : day.label;
 const translateMeal = (meal: string, lang: GuidanceLanguage) => mealLabels[lang][meal] || meal;
 const translateStatus = (s: string, lang: GuidanceLanguage) => statusLabels[lang][s] || s;
+const listToText = (items?: string[] | null) => (items || []).join(", ");
+const textToList = (value: string) =>
+  value.split(",").map((item) => item.trim()).filter(Boolean);
 
 /* ─── Tab config ─────────────────────────────────────────────────────────── */
 const TABS: { id: ActiveTab; icon: React.ReactNode; enLabel: string; arLabel: string }[] = [
@@ -370,10 +409,23 @@ export default function GuidanceExperience() {
     return s === "ar" || s === "en" ? s : "en";
   });
   const [loading, setLoading] = useState({
-    conditions: true, rules: false, plan: false, chat: false, feedback: false, billing: false,
+    conditions: true, rules: false, plan: false, chat: false, feedback: false, billing: false, assistant: false,
   });
   const [notice, setNotice] = useState("");
   const [billingAccess, setBillingAccess] = useState<BillingAccess | null>(null);
+  const [assistantDashboard, setAssistantDashboard] = useState<AssistantDashboard | null>(null);
+  const [profileForm, setProfileForm] = useState({
+    allergies: "",
+    disliked_foods: "",
+    preferred_foods: "",
+    meal_count_preference: "",
+    fasting_days_per_week: "2",
+    budget_level: "",
+    notes: "",
+  });
+  const [foodLogForm, setFoodLogForm] = useState({ food_name: "", meal_type: "", notes: "" });
+  const [planEditForm, setPlanEditForm] = useState({ action: "replace_food", food: "", replacement: "" });
+  const [shoppingList, setShoppingList] = useState<ShoppingList | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const loadedRulesKeyRef = useRef<string | null>(null);
   const loadedBillingKeyRef = useRef<string | null>(null);
@@ -422,6 +474,33 @@ export default function GuidanceExperience() {
       loadedBillingKeyRef.current = null;
     }
   }, [selectedConditionId]);
+
+  const loadAssistantDashboard = useCallback(async () => {
+    const authToken = localStorage.getItem("authToken");
+    if (!authToken) { setAssistantDashboard(null); return; }
+
+    try {
+      const { data } = await api.get<AssistantDashboard>("/assistant/dashboard");
+      setAssistantDashboard(data);
+      setProfileForm({
+        allergies: listToText(data.profile?.allergies),
+        disliked_foods: listToText(data.profile?.disliked_foods),
+        preferred_foods: listToText(data.profile?.preferred_foods),
+        meal_count_preference: data.profile?.meal_count_preference || "",
+        fasting_days_per_week: String(data.profile?.fasting_days_per_week ?? 2),
+        budget_level: data.profile?.budget_level || "",
+        notes: data.profile?.notes || "",
+      });
+    } catch {
+      setAssistantDashboard(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void loadAssistantDashboard();
+    });
+  }, [loadAssistantDashboard]);
 
   const startCheckout = async (type: "premium" | "diet_plan", duration?: string) => {
     const authToken = localStorage.getItem("authToken");
@@ -511,7 +590,8 @@ export default function GuidanceExperience() {
       .finally(() => setLoading((s) => ({ ...s, rules: false })));
 
     void loadBillingAccess();
-  }, [selectedConditionId, selectedConditionName, loadBillingAccess]);
+    void loadAssistantDashboard();
+  }, [selectedConditionId, selectedConditionName, loadBillingAccess, loadAssistantDashboard]);
 
   /* Restore diet plan */
   useEffect(() => {
@@ -592,6 +672,12 @@ export default function GuidanceExperience() {
         conditionId: selectedCondition.id, conditionName: selectedCondition.name,
         duration: planDuration, dietPlan: data,
       } satisfies StoredDietPlan));
+      await api.post("/assistant/plans", {
+        condition_id: selectedCondition.id,
+        duration: data.duration || planDuration,
+        plan: data,
+      }).catch(() => undefined);
+      await loadAssistantDashboard();
     } catch (e) { setNotice(getApiMessage(e, "Diet plan generation is unavailable.")); }
     finally { setLoading((s) => ({ ...s, plan: false })); }
   };
@@ -694,6 +780,117 @@ export default function GuidanceExperience() {
   };
 
   /* ── render helpers ────────────────────────────────────────────────────── */
+  const handleProfileSave = async () => {
+    setLoading((s) => ({ ...s, assistant: true }));
+    setNotice("");
+    try {
+      await api.put("/assistant/profile", {
+        allergies: textToList(profileForm.allergies),
+        disliked_foods: textToList(profileForm.disliked_foods),
+        preferred_foods: textToList(profileForm.preferred_foods),
+        meal_count_preference: profileForm.meal_count_preference || null,
+        fasting_days_per_week: Number(profileForm.fasting_days_per_week || 2),
+        budget_level: profileForm.budget_level || null,
+        language_preference: language,
+        notes: profileForm.notes || null,
+      });
+      setNotice("Assistant profile saved.");
+      await loadAssistantDashboard();
+    } catch (e) {
+      setNotice(getApiMessage(e, "Unable to save assistant profile."));
+    } finally {
+      setLoading((s) => ({ ...s, assistant: false }));
+    }
+  };
+
+  const handleFoodLogSave = async () => {
+    if (!foodLogForm.food_name.trim()) return;
+
+    setLoading((s) => ({ ...s, assistant: true }));
+    try {
+      await api.post("/assistant/food-logs", {
+        condition_id: selectedCondition?.id,
+        food_name: foodLogForm.food_name.trim(),
+        meal_type: foodLogForm.meal_type || null,
+        notes: foodLogForm.notes || null,
+      });
+      setFoodLogForm({ food_name: "", meal_type: "", notes: "" });
+      setNotice("Food logged. The AI can use it for context.");
+      await loadAssistantDashboard();
+    } catch (e) {
+      setNotice(getApiMessage(e, "Unable to log food."));
+    } finally {
+      setLoading((s) => ({ ...s, assistant: false }));
+    }
+  };
+
+  const handleSaveCurrentPlan = async () => {
+    if (!dietPlan) { setNotice("Generate a plan first."); return; }
+
+    try {
+      await api.post("/assistant/plans", {
+        condition_id: selectedCondition?.id,
+        duration: dietPlan.duration || planDuration,
+        plan: dietPlan,
+      });
+      setNotice("Diet plan saved.");
+      await loadAssistantDashboard();
+    } catch (e) {
+      setNotice(getApiMessage(e, "Unable to save diet plan."));
+    }
+  };
+
+  const handlePlanEdit = async () => {
+    if (!dietPlan || !selectedCondition) { setNotice("Generate a plan first."); return; }
+
+    setLoading((s) => ({ ...s, assistant: true }));
+    try {
+      const { data } = await api.post<{ message?: string; plan: DietPlanResponse }>("/assistant/plans/edit", {
+        condition_id: selectedCondition.id,
+        duration: dietPlan.duration || planDuration,
+        plan: dietPlan,
+        action: planEditForm.action,
+        food: planEditForm.food || null,
+        replacement: planEditForm.replacement || null,
+      });
+      setDietPlan(data.plan);
+      localStorage.setItem(getDietPlanKey(selectedCondition.id), JSON.stringify({
+        conditionId: selectedCondition.id,
+        conditionName: selectedCondition.name,
+        duration: data.plan.duration || planDuration,
+        dietPlan: data.plan,
+      } satisfies StoredDietPlan));
+      setNotice(data.message || "Plan updated.");
+      await loadAssistantDashboard();
+    } catch (e) {
+      setNotice(getApiMessage(e, "Unable to edit plan."));
+    } finally {
+      setLoading((s) => ({ ...s, assistant: false }));
+    }
+  };
+
+  const handleShoppingList = async () => {
+    if (!dietPlan) { setNotice("Generate a plan first."); return; }
+
+    try {
+      const { data } = await api.post<{ shopping_list: ShoppingList }>("/assistant/shopping-list", {
+        plan: dietPlan,
+      });
+      setShoppingList(data.shopping_list);
+    } catch (e) {
+      setNotice(getApiMessage(e, "Unable to create shopping list."));
+    }
+  };
+
+  const handleReminderToggle = async (reminder: AssistantReminder) => {
+    try {
+      await api.patch(`/assistant/reminders/${reminder.id}`, { enabled: !reminder.enabled });
+      await loadAssistantDashboard();
+    } catch (e) {
+      setNotice(getApiMessage(e, "Unable to update reminder."));
+    }
+  };
+
   const goalName = localizedConditionName(selectedCondition, language);
 
   const renderGoalsPanel = () => (
@@ -846,6 +1043,112 @@ export default function GuidanceExperience() {
     </div>
   );
 
+  const renderAssistantTools = () => (
+    <div className="rounded-2xl border border-stone-200 bg-white p-5">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="font-semibold text-stone-900">Assistant workspace</h3>
+          <p className="text-sm text-stone-500">Personalize answers, log meals, edit plans, and keep reminders visible.</p>
+        </div>
+        <button
+          onClick={() => void loadAssistantDashboard()}
+          className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl border border-stone-200 px-3 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 sm:mt-0"
+        >
+          <RefreshCw className="h-4 w-4" /> Refresh
+        </button>
+      </div>
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-2">
+        <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/70 p-4">
+          <h4 className="text-sm font-bold text-stone-800">Nutrition profile</h4>
+          <input value={profileForm.allergies} onChange={(e) => setProfileForm((s) => ({ ...s, allergies: e.target.value }))} placeholder="Allergies, comma separated" className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+          <input value={profileForm.disliked_foods} onChange={(e) => setProfileForm((s) => ({ ...s, disliked_foods: e.target.value }))} placeholder="Disliked foods" className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+          <input value={profileForm.preferred_foods} onChange={(e) => setProfileForm((s) => ({ ...s, preferred_foods: e.target.value }))} placeholder="Preferred foods" className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+          <div className="grid gap-2 sm:grid-cols-3">
+            <input value={profileForm.meal_count_preference} onChange={(e) => setProfileForm((s) => ({ ...s, meal_count_preference: e.target.value }))} placeholder="Meals/day" className="rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+            <input type="number" min="0" max="7" value={profileForm.fasting_days_per_week} onChange={(e) => setProfileForm((s) => ({ ...s, fasting_days_per_week: e.target.value }))} placeholder="Fasting days" className="rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+            <select value={profileForm.budget_level} onChange={(e) => setProfileForm((s) => ({ ...s, budget_level: e.target.value }))} className="rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500">
+              <option value="">Budget</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">Flexible</option>
+            </select>
+          </div>
+          <textarea value={profileForm.notes} onChange={(e) => setProfileForm((s) => ({ ...s, notes: e.target.value }))} placeholder="Notes for the assistant" rows={2} className="w-full resize-none rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+          <button onClick={handleProfileSave} disabled={loading.assistant} className="w-full rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60">Save profile</button>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/70 p-4">
+          <h4 className="text-sm font-bold text-stone-800">Food log</h4>
+          <div className="grid gap-2 sm:grid-cols-[1fr_140px]">
+            <input value={foodLogForm.food_name} onChange={(e) => setFoodLogForm((s) => ({ ...s, food_name: e.target.value }))} placeholder="What did you eat?" className="rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+            <select value={foodLogForm.meal_type} onChange={(e) => setFoodLogForm((s) => ({ ...s, meal_type: e.target.value }))} className="rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500">
+              <option value="">Meal</option>
+              <option>Breakfast</option>
+              <option>Lunch</option>
+              <option>Dinner</option>
+              <option>Snack</option>
+            </select>
+          </div>
+          <input value={foodLogForm.notes} onChange={(e) => setFoodLogForm((s) => ({ ...s, notes: e.target.value }))} placeholder="Optional note" className="w-full rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+          <button onClick={handleFoodLogSave} disabled={loading.assistant || !foodLogForm.food_name.trim()} className="w-full rounded-xl bg-stone-900 py-2.5 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:opacity-60">Log food</button>
+          <div className="space-y-1">
+            {(assistantDashboard?.recent_logs || []).slice(0, 4).map((log) => (
+              <p key={log.id} className="rounded-lg bg-white px-3 py-2 text-xs text-stone-600">{log.food_name}{log.meal_type ? ` · ${log.meal_type}` : ""}</p>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-2">
+        <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/70 p-4">
+          <h4 className="text-sm font-bold text-stone-800">Plan tools</h4>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <select value={planEditForm.action} onChange={(e) => setPlanEditForm((s) => ({ ...s, action: e.target.value }))} className="rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500">
+              <option value="replace_food">Replace food</option>
+              <option value="remove_food">Remove food</option>
+              <option value="no_breakfast">No breakfast</option>
+              <option value="make_cheaper">Make cheaper</option>
+            </select>
+            <input value={planEditForm.food} onChange={(e) => setPlanEditForm((s) => ({ ...s, food: e.target.value }))} placeholder="Food" className="rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+            <input value={planEditForm.replacement} onChange={(e) => setPlanEditForm((s) => ({ ...s, replacement: e.target.value }))} placeholder="Replacement" className="rounded-lg border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <button onClick={handlePlanEdit} disabled={!dietPlan || loading.assistant} className="rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60">Apply edit</button>
+            <button onClick={handleSaveCurrentPlan} disabled={!dietPlan} className="rounded-xl border border-stone-200 bg-white py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-60">Save plan</button>
+            <button onClick={handleShoppingList} disabled={!dietPlan} className="rounded-xl border border-stone-200 bg-white py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-60">Shopping list</button>
+          </div>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-stone-100 bg-stone-50/70 p-4">
+          <h4 className="text-sm font-bold text-stone-800">Reminders</h4>
+          <div className="space-y-2">
+            {(assistantDashboard?.reminders || []).map((reminder) => (
+              <label key={reminder.id} className="flex items-center gap-3 rounded-lg bg-white px-3 py-2 text-sm text-stone-700">
+                <input type="checkbox" checked={reminder.enabled} onChange={() => handleReminderToggle(reminder)} className="h-4 w-4 accent-emerald-600" />
+                <span>{reminder.title}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {shoppingList && (
+        <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+          <h4 className="text-sm font-bold text-emerald-900">Shopping list</h4>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {Object.entries(shoppingList).map(([group, items]) => (
+              <div key={group} className="rounded-lg bg-white p-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">{group.replaceAll("_", " ")}</p>
+                <p className="mt-1 text-sm text-stone-700">{items.length ? items.join(", ") : "None"}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const renderPlanPanel = () => (
     <div className="space-y-5 animate-in fade-in slide-in-from-bottom-3 duration-300">
       <div>
@@ -907,6 +1210,7 @@ export default function GuidanceExperience() {
           </div>
         </div>
       )}
+      {renderAssistantTools()}
       <div className="rounded-2xl border border-stone-200 bg-white p-5">
         <h3 className="mb-3 font-semibold text-stone-800">{t.instructions}</h3>
         <ul className={`space-y-2 text-sm leading-relaxed text-stone-600 ${isArabic ? "list-none pr-0" : "list-none pl-0"}`}>

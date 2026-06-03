@@ -54,6 +54,27 @@ interface BillingAccess {
   };
 }
 
+interface AssistantDashboard {
+  profile?: {
+    allergies?: string[] | null;
+    disliked_foods?: string[] | null;
+    preferred_foods?: string[] | null;
+    meal_count_preference?: string | null;
+    fasting_days_per_week?: number | null;
+    budget_level?: string | null;
+    language_preference?: string | null;
+    notes?: string | null;
+  } | null;
+  recent_logs?: Array<{
+    food_name?: string | null;
+    meal_type?: string | null;
+  }>;
+  reminders?: Array<{
+    title?: string | null;
+    enabled?: boolean;
+  }>;
+}
+
 const apiBaseUrl =
   process.env.LARAVEL_API_BASE_URL || "https://tayibat-production.up.railway.app/api";
 
@@ -104,6 +125,16 @@ const fetchBillingAccess = async (authorization: string | null) => {
 
   try {
     return await fetchJson<BillingAccess>("/billing/access", authorization);
+  } catch {
+    return null;
+  }
+};
+
+const fetchAssistantDashboard = async (authorization: string | null) => {
+  if (!authorization) return null;
+
+  try {
+    return await fetchJson<AssistantDashboard>("/assistant/dashboard", authorization);
   } catch {
     return null;
   }
@@ -376,6 +407,11 @@ const resolveCheeseGuidanceAnswer = (message: string, responseLanguage: "English
 
   if (!isCheeseQuestion) return null;
 
+  const isBroadCheeseQuestion =
+    normalizedMessage.includes(" can i eat cheese ") ||
+    normalizedMessage.includes(" is cheese allowed ") ||
+    normalizedMessage.includes(" cheese allowed ");
+
   const asksForNotAllowed =
     normalizedMessage.includes(" not allowed ") ||
     normalizedMessage.includes(" unallowed ") ||
@@ -399,6 +435,17 @@ const resolveCheeseGuidanceAnswer = (message: string, responseLanguage: "English
     normalizedMessage.includes(" لا يمكنني ") ||
     normalizedMessage.includes(" لا يجب ") ||
     normalizedMessage.includes(" لا يمكن ");
+
+  const asksForAllowed =
+    normalizedMessage.includes(" allowed ") ||
+    normalizedMessage.includes(" can eat ") ||
+    normalizedMessage.includes(" can i eat ");
+
+  if (isBroadCheeseQuestion && !asksForAllowed && !asksForNotAllowed) {
+    return responseLanguage === "Arabic"
+      ? "هل تقصد الجبنة المطبوخة أم الجبنة غير المطبوخة؟"
+      : "Do you mean cooked cheese or uncooked cheese?";
+  }
 
   const items = asksForNotAllowed
     ? cheeseNotAllowedItems[responseLanguage]
@@ -457,6 +504,38 @@ const resolveSafetyContext = (
       ? "The user may be asking for diagnosis, treatment, cure, medicine, or replacing medical care. Refuse that part and say Tayibat provides food guidance only, not diagnosis or treatment."
       : "No treatment/medicine request detected.",
   ].join(" ");
+};
+
+const formatAssistantDashboardForAgent = (dashboard: AssistantDashboard | null) => {
+  if (!dashboard) {
+    return "No saved nutrition profile, recent food logs, or reminders were available.";
+  }
+
+  const profile = dashboard.profile;
+  const recentLogs = (dashboard.recent_logs || [])
+    .slice(0, 6)
+    .map((log) => `${log.food_name || "unknown food"}${log.meal_type ? ` (${log.meal_type})` : ""}`)
+    .join(", ");
+  const reminders = (dashboard.reminders || [])
+    .filter((reminder) => reminder.enabled)
+    .map((reminder) => reminder.title)
+    .filter(Boolean)
+    .join(" | ");
+
+  return [
+    "User nutrition profile:",
+    profile?.allergies?.length ? `Allergies: ${profile.allergies.join(", ")}` : "Allergies: none saved",
+    profile?.disliked_foods?.length ? `Disliked foods: ${profile.disliked_foods.join(", ")}` : "Disliked foods: none saved",
+    profile?.preferred_foods?.length ? `Preferred foods: ${profile.preferred_foods.join(", ")}` : "Preferred foods: none saved",
+    profile?.meal_count_preference ? `Meal preference: ${profile.meal_count_preference}` : "",
+    typeof profile?.fasting_days_per_week === "number" ? `Fasting days per week: ${profile.fasting_days_per_week}` : "",
+    profile?.budget_level ? `Budget level: ${profile.budget_level}` : "",
+    profile?.notes ? `Profile notes: ${profile.notes}` : "",
+    recentLogs ? `Recent food logs: ${recentLogs}` : "Recent food logs: none",
+    reminders ? `Active reminders: ${reminders}` : "Active reminders: none",
+  ]
+    .filter(Boolean)
+    .join("\n");
 };
 
 const foodCategoryMap: Record<string, string[]> = {
@@ -919,6 +998,7 @@ export async function POST(request: Request) {
     }
 
     const hasPremiumAccess = Boolean(billingAccess?.premium || billingAccess?.ai?.unlimited);
+    const assistantDashboard = await fetchAssistantDashboard(authorization);
     const rules = await fetchJson<FoodRule[]>(`/rules/${encodeURIComponent(conditionName)}`, authorization);
     const rulesContext = formatRulesForAgent(rules);
     const directRuleContext = resolveDirectRuleContext(message, rules);
@@ -926,6 +1006,7 @@ export async function POST(request: Request) {
     const categoryListContext = resolveCategoryListContext(message, rules, responseLanguage, hasPremiumAccess);
     const categoryContext = resolveCategoryContext(message, rules);
     const safetyContext = resolveSafetyContext(message, conditionName);
+    const assistantContext = formatAssistantDashboardForAgent(assistantDashboard);
 
     if (!rulesContext) {
       return NextResponse.json({
@@ -954,6 +1035,9 @@ export async function POST(request: Request) {
           "When using that Premium note, do not add Status, Reason, or Recommendation lines.",
           "Use the category-array match when it is present. For example, if broccoli belongs to vegetables and vegetables is avoid, broccoli is also avoid.",
           "Answer in the requested response language.",
+          "Use the assistant context to personalize practical recommendations, but never override backend food-rule status with profile preferences.",
+          "If recent food logs are relevant, use them for next-meal guidance.",
+          "If the user asks to modify a saved plan, explain the change briefly and suggest using the plan tools when an exact saved-plan edit is needed.",
           "Always use a structured answer, not a paragraph, unless you are only asking the user to select a goal.",
           "For a specific food question in English, use exactly these labels on separate lines: Status: Allowed/Moderate/Avoid/Not available. Reason: backend reason or missing-rule reason. Recommendation: one short practical sentence.",
           "For a specific food question in Arabic, use Arabic labels equivalent to: Status, Reason, Recommendation. Keep the same three-line structure.",
@@ -996,6 +1080,9 @@ export async function POST(request: Request) {
         "Safety context:",
         "{safetyContext}",
         "",
+        "Assistant context:",
+        "{assistantContext}",
+        "",
         "User question:",
         "{message}",
         ].join("\n"),
@@ -1013,6 +1100,7 @@ export async function POST(request: Request) {
       categoryListContext,
       categoryContext,
       safetyContext,
+      assistantContext,
       message,
     });
 
