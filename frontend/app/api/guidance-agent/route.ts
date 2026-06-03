@@ -201,6 +201,77 @@ const normalizeFoodText = (value: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+const levenshteinDistance = (a: string, b: string) => {
+  if (a === b) return 0;
+  if (!a) return b.length;
+  if (!b) return a.length;
+
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  const current = Array.from({ length: b.length + 1 }, () => 0);
+
+  for (let i = 1; i <= a.length; i++) {
+    current[0] = i;
+
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min(
+        current[j - 1] + 1,
+        previous[j] + 1,
+        previous[j - 1] + cost
+      );
+    }
+
+    previous.splice(0, previous.length, ...current);
+  }
+
+  return previous[b.length];
+};
+
+const maxFuzzyDistance = (value: string) => {
+  if (value.length <= 3) return 0;
+  if (value.length <= 5) return 1;
+  if (value.length <= 9) return 2;
+  return 3;
+};
+
+const fuzzyTokenMatch = (typed: string, expected: string) => {
+  if (!typed || !expected) return false;
+  if (typed === expected) return true;
+
+  return levenshteinDistance(typed, expected) <= maxFuzzyDistance(expected);
+};
+
+const fuzzyPhraseMatch = (message: string, phrase: string) => {
+  const normalizedMessage = normalizeFoodText(message);
+  const normalizedPhrase = normalizeFoodText(phrase);
+
+  if (!normalizedMessage || !normalizedPhrase) return false;
+  if (` ${normalizedMessage} `.includes(` ${normalizedPhrase} `)) return true;
+
+  const messageTokens = normalizedMessage.split(" ");
+  const phraseTokens = normalizedPhrase.split(" ");
+
+  if (phraseTokens.length === 1) {
+    return messageTokens.some((token) => fuzzyTokenMatch(token, normalizedPhrase));
+  }
+
+  if (messageTokens.length < phraseTokens.length) return false;
+
+  for (let index = 0; index <= messageTokens.length - phraseTokens.length; index++) {
+    const window = messageTokens.slice(index, index + phraseTokens.length);
+    const matches = phraseTokens.every((token, tokenIndex) =>
+      fuzzyTokenMatch(window[tokenIndex], token)
+    );
+
+    if (matches) return true;
+  }
+
+  return false;
+};
+
+const fuzzyMatchAny = (message: string, phrases: string[]) =>
+  phrases.some((phrase) => fuzzyPhraseMatch(message, phrase));
+
 const hasArabicText = (value: string) => /[\u0600-\u06FF]/.test(value);
 
 const resolveReplyLanguage = (
@@ -307,12 +378,12 @@ const resolveRiceGuidanceAnswer = (
   conditionName: string,
   responseLanguage: "English" | "Arabic"
 ) => {
-  const normalizedMessage = ` ${normalizeFoodText(message)} `;
-  const isRiceQuestion =
-    normalizedMessage.includes(" rice ") ||
-    normalizedMessage.includes(" \u0623\u0631\u0632 ") ||
-    normalizedMessage.includes(" \u0627\u0631\u0632 ") ||
-    normalizedMessage.includes(" \u0631\u0632 ");
+  const isRiceQuestion = fuzzyMatchAny(message, [
+    "rice",
+    "\u0623\u0631\u0632",
+    "\u0627\u0631\u0632",
+    "\u0631\u0632",
+  ]);
 
   if (!isRiceQuestion) return null;
 
@@ -335,14 +406,14 @@ const resolveRiceGuidanceAnswer = (
 };
 
 const resolveFishGuidanceAnswer = (message: string, responseLanguage: "English" | "Arabic") => {
-  const normalizedMessage = ` ${normalizeFoodText(message)} `;
-  const isFishQuestion =
-    normalizedMessage.includes(" fish ") ||
-    normalizedMessage.includes(" fishes ") ||
-    normalizedMessage.includes(" seafood ") ||
-    normalizedMessage.includes(" \u0633\u0645\u0643 ") ||
-    normalizedMessage.includes(" \u0627\u0633\u0645\u0627\u0643 ") ||
-    normalizedMessage.includes(" \u0623\u0633\u0645\u0627\u0643 ");
+  const isFishQuestion = fuzzyMatchAny(message, [
+    "fish",
+    "fishes",
+    "seafood",
+    "\u0633\u0645\u0643",
+    "\u0627\u0633\u0645\u0627\u0643",
+    "\u0623\u0633\u0645\u0627\u0643",
+  ]);
 
   if (!isFishQuestion) return null;
 
@@ -405,7 +476,7 @@ const resolveCheeseGuidanceAnswer = (message: string, responseLanguage: "English
     normalizedMessage.includes(" اجبان ") ||
     normalizedMessage.includes(" الاجبان ");
 
-  if (!isCheeseQuestion) return null;
+  if (!isCheeseQuestion && !fuzzyMatchAny(message, ["cheese", "cheeses"])) return null;
 
   const isBroadCheeseQuestion =
     normalizedMessage.includes(" can i eat cheese ") ||
@@ -780,7 +851,6 @@ const formatCategoryArrayItems = (items: string[], responseLanguage: "English" |
 };
 
 const resolveDirectRuleContext = (message: string, rules: FoodRule[]) => {
-  const normalizedMessage = ` ${normalizeFoodText(message)} `;
   const sortedRules = [...rules].sort(
     (a, b) => (b.food?.name || "").length - (a.food?.name || "").length
   );
@@ -790,8 +860,8 @@ const resolveDirectRuleContext = (message: string, rules: FoodRule[]) => {
     const arabicFoodName = normalizeFoodText(rule.food?.name_ar || "");
 
     return (
-      (foodName && normalizedMessage.includes(` ${foodName} `)) ||
-      (arabicFoodName && normalizedMessage.includes(` ${arabicFoodName} `))
+      (foodName && fuzzyPhraseMatch(message, foodName)) ||
+      (arabicFoodName && fuzzyPhraseMatch(message, arabicFoodName))
     );
   });
 
@@ -859,9 +929,7 @@ const resolveCategoryListContext = (
 
   for (const [category, aliases] of Object.entries(categoryListAliases)) {
     const categoryAliases = [category, ...(aliases || [])];
-    const matchedAlias = categoryAliases.find((alias) =>
-      normalizedMessage.includes(` ${normalizeFoodText(alias)} `)
-    );
+    const matchedAlias = categoryAliases.find((alias) => fuzzyPhraseMatch(message, alias));
 
     if (!matchedAlias || (!hasListIntent && normalizeFoodText(matchedAlias) !== normalizeFoodText(category))) continue;
 
@@ -898,13 +966,9 @@ const resolveCategoryListContext = (
 };
 
 const resolveCategoryContext = (message: string, rules: FoodRule[]) => {
-  const normalizedMessage = ` ${normalizeFoodText(message)} `;
-
   for (const [category, items] of Object.entries(foodCategoryMap)) {
     const matches = [...items, category].sort((a, b) => b.length - a.length);
-    const matchedFood = matches.find((item) =>
-      normalizedMessage.includes(` ${normalizeFoodText(item)} `)
-    );
+    const matchedFood = matches.find((item) => fuzzyPhraseMatch(message, item));
 
     if (!matchedFood) continue;
 

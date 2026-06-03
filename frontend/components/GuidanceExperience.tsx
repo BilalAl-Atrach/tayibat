@@ -204,9 +204,13 @@ const getConditionInstructionKey = (conditionName?: string | null) => {
   return null;
 };
 
-const getDietPlanInstructions = (conditionName: string | null | undefined, language: GuidanceLanguage) => {
+const getDietPlanInstructions = (
+  conditionName: string | null | undefined,
+  language: GuidanceLanguage,
+  includePremiumGuidelines = true
+) => {
   const conditionKey = getConditionInstructionKey(conditionName);
-  const conditionInstructions = conditionKey ? conditionDietPlanInstructions[conditionKey][language] : [];
+  const conditionInstructions = includePremiumGuidelines && conditionKey ? conditionDietPlanInstructions[conditionKey][language] : [];
   const instructions = [...dietPlanInstructions[language], ...conditionInstructions];
   const mealInstruction = mealFlexibilityInstruction[language];
   const hasMealInstruction = instructions.includes(mealInstruction);
@@ -601,7 +605,7 @@ export default function GuidanceExperience() {
     const pw = window.open("", "_blank", "width=1100,height=800");
     if (!pw) { setNotice("Allow pop-ups to download the PDF."); return; }
     const condName = localizedConditionName(selectedCondition, language) || dietPlan.condition || "Diet plan";
-    const instructionsMarkup = getDietPlanInstructions(selectedCondition?.name || dietPlan.condition, language)
+    const instructionsMarkup = getDietPlanInstructions(selectedCondition?.name || dietPlan.condition, language, isPremium)
       .map((i) => {
         const important = isMealFlexibilityInstruction(i, language);
 
@@ -910,7 +914,7 @@ export default function GuidanceExperience() {
       <div className="rounded-2xl border border-stone-200 bg-white p-5">
         <h3 className="mb-3 font-semibold text-stone-800">{t.instructions}</h3>
         <ul className={`space-y-2 text-sm leading-relaxed text-stone-600 ${isArabic ? "list-none pr-0" : "list-none pl-0"}`}>
-          {getDietPlanInstructions(selectedCondition?.name, language).map((instr, i) => {
+          {getDietPlanInstructions(selectedCondition?.name, language, isPremium).map((instr, i) => {
             const important = isMealFlexibilityInstruction(instr, language);
 
             return (
@@ -1170,6 +1174,7 @@ export default function GuidanceExperience() {
             language={language}
             onClose={() => setIsPlanOpen(false)}
             onDownload={handleDownloadPlanPdf}
+            isPremium={isPremium}
             t={t}
           />
         )}
@@ -1309,7 +1314,7 @@ function StatusPill({ status, language }: { status: string; language: GuidanceLa
 
 /* ─── PlanViewer modal ────────────────────────────────────────────────────── */
 function PlanViewer({
-  plan, conditionName, conditionKey, language, onClose, onDownload, t,
+  plan, conditionName, conditionKey, language, onClose, onDownload, isPremium, t,
 }: {
   plan: DietPlanResponse;
   conditionName: string;
@@ -1317,10 +1322,11 @@ function PlanViewer({
   language: GuidanceLanguage;
   onClose: () => void;
   onDownload: () => void;
+  isPremium: boolean;
   t: GuidanceText;
 }) {
   const isArabic = language === "ar";
-  const instructions = getDietPlanInstructions(conditionKey || plan.condition, language);
+  const instructions = getDietPlanInstructions(conditionKey || plan.condition, language, isPremium);
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-4" dir={isArabic ? "rtl" : "ltr"}>
       <div className="flex max-h-[96dvh] w-full max-w-5xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-h-[90dvh] sm:rounded-2xl">
