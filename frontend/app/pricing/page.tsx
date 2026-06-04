@@ -133,7 +133,7 @@ export default function PricingPage() {
                 Rule-based plans
               </div>
               <p className="mt-2 text-sm leading-6 text-gray-700">
-                Plans use Tayibat backend rules and only unlock the selected health goal and duration.
+                Plans use Tayibat rules and only unlock the selected health goal and duration.
               </p>
             </div>
           </div>

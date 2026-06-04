@@ -18,11 +18,10 @@ export default function MedicalDisclaimerPage() {
         <div className="mt-6 space-y-5 text-base leading-8 text-gray-700">
           <p>
             Tayibat provides general nutrition and food guidance based on the rules of the
-            Tayibat system. It is not a medical device and does not provide diagnosis, treatment,
-            cure, or emergency advice.
+            Tayibat system. It is not a medical device and does not provide emergency advice.
           </p>
           <p>
-            Guidance for diabetes, cancer nutrition support, high cholesterol or digestive health is better to be reviewed with a qualified doctor, dietitian, or licensed
+            Guidance for diabetes, cancer nutrition support, high cholesterol or digestive health is better to be reviewed in parallel with a qualified doctor, dietitian, or licensed
             health professional. 
           </p>
           <p>

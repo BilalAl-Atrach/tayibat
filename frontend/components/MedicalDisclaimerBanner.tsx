@@ -7,8 +7,7 @@ export default function MedicalDisclaimerBanner() {
       <div className="flex gap-3">
         <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
         <p>
-          Tayibat provides food guidance only. It does not diagnose, treat, cure, or replace
-           medical care.{" "}
+          Tayibat provides food guidance only.{" "}
           <Link href="/medical-disclaimer" className="font-semibold underline">
             Read the medical disclaimer
           </Link>
