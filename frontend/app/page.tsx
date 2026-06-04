@@ -75,16 +75,12 @@ function Reveal({
 const foods = [
   "🥑 Avocado",
   "🫐 Blueberries",
-  "🥦 Broccoli",
-  "🍋 Lemon",
-  "🥗 Leafy Greens",
   "🫚 Olive Oil",
   "🐟 Salmon",
   "🥜 Almonds",
   "🍠 Sweet Potato",
-  "🫑 Bell Pepper",
-  "🥝 Kiwi",
   "🌿 Herbs",
+  "🥩 Meat",
 ];
 
 function Marquee() {
@@ -267,7 +263,7 @@ export default function Home() {
         .float-b { animation: floatB 9s ease-in-out infinite; }
         .float-c { animation: float 11s ease-in-out infinite 1.5s; }
         .spin-slow { animation: spin-slow 30s linear infinite; }
-        .marquee-track { animation: marquee 30s linear infinite; }
+        .marquee-track { animation: marquee 12s linear infinite; }
         .shimmer-text {
           background: linear-gradient(90deg, #065f46, #34d399, #059669, #065f46);
           background-size: 200% auto;
@@ -322,7 +318,7 @@ export default function Home() {
           <div className="pointer-events-none absolute right-[8%] bottom-[30%] float-a text-4xl opacity-20" style={{ animationDelay: "3s" }}>🍋</div>
           <div className="pointer-events-none absolute left-[38%] bottom-[15%] float-b text-4xl opacity-15" style={{ animationDelay: "5s" }}>🌱</div>
 
-          <div className="relative z-10 mx-auto max-w-7xl px-6 pb-16 pt-16 lg:pt-32">
+          <div className="relative z-10 mx-auto max-w-7xl px-6 pb-16 pt-16 lg:pt-16">
             <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
 
               {/* LEFT */}
@@ -334,7 +330,7 @@ export default function Home() {
 
                 <h1 className="hero-appear-2 mt-7 text-5xl font-black leading-[1.1] tracking-tight text-gray-950 lg:text-6xl xl:text-7xl">
                   Eat with{" "}
-                  <span className="shimmer-text">Wisdom,</span>
+                  <span className="shimmer-text">Tayibat,</span>
                   <br /> Live with{" "}
                   <span className="italic">Purpose.</span>
                 </h1>
