@@ -439,6 +439,38 @@ const resolveVinegarGuidanceAnswer = (message: string, responseLanguage: "Englis
     : "All kinds of vinegar are not allowed.";
 };
 
+const resolvePomegranateMolassesGuidanceAnswer = (
+  message: string,
+  conditionName: string,
+  responseLanguage: "English" | "Arabic"
+) => {
+  const isPomegranateMolassesQuestion = fuzzyMatchAny(message, [
+    "pomegranate molasses",
+    "pomegranate syrup",
+    "دبس الرمان",
+    "دبس رمان",
+  ]);
+
+  if (!isPomegranateMolassesQuestion) return null;
+
+  const normalizedCondition = normalizeFoodText(conditionName);
+  const hasDiabetes =
+    normalizedCondition.includes("diabetes") ||
+    normalizedCondition.includes("diabetic") ||
+    normalizedCondition.includes("\u0627\u0644\u0633\u0643\u0631\u064a") ||
+    normalizedCondition.includes("\u0633\u0643\u0631\u064a");
+
+  if (responseLanguage === "Arabic") {
+    return hasDiabetes
+      ? "\u062f\u0628\u0633 \u0627\u0644\u0631\u0645\u0627\u0646 \u063a\u064a\u0631 \u0645\u0633\u0645\u0648\u062d \u0644\u0645\u0631\u0636\u0649 \u0627\u0644\u0633\u0643\u0631\u064a \u0644\u0623\u0646\u0647 \u064a\u062d\u062a\u0648\u064a \u0639\u0644\u0649 \u0643\u0645\u064a\u0629 \u0639\u0627\u0644\u064a\u0629 \u0645\u0646 \u0627\u0644\u0633\u0643\u0631."
+      : "\u062f\u0628\u0633 \u0627\u0644\u0631\u0645\u0627\u0646 \u0645\u0633\u0645\u0648\u062d \u0628\u0627\u0639\u062a\u062f\u0627\u0644.";
+  }
+
+  return hasDiabetes
+    ? "Pomegranate molasses is not allowed for diabetes because it contains a high amount of sugar."
+    : "Pomegranate molasses is allowed in moderation.";
+};
+
 const cheeseAllowedItems = {
   English: [
     "cheddar cheese",
@@ -1049,42 +1081,62 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply: "Please log in to use the AI guide." }, { status: 401 });
     }
 
+    const billingAccess = await fetchBillingAccess(authorization);
+    const limitResponse = aiLimitResponse(billingAccess);
+
+    if (limitResponse) {
+      return limitResponse;
+    }
+
+    const countedShortcutResponse = async (reply: string) => {
+      const usage = await consumeAiQuestion(authorization);
+
+      if (!usage.ok) {
+        return NextResponse.json({ reply: usage.message }, { status: usage.status });
+      }
+
+      return NextResponse.json({ reply });
+    };
+
     const arabicNameAnswer = resolveArabicNameAnswer(message, responseLanguage);
 
     if (arabicNameAnswer) {
-      return NextResponse.json({ reply: arabicNameAnswer });
+      return countedShortcutResponse(arabicNameAnswer);
     }
 
     const directReplyLanguage = resolveReplyLanguage(message, responseLanguage);
     const riceGuidanceAnswer = resolveRiceGuidanceAnswer(message, conditionName, directReplyLanguage);
 
     if (riceGuidanceAnswer) {
-      return NextResponse.json({ reply: riceGuidanceAnswer });
+      return countedShortcutResponse(riceGuidanceAnswer);
     }
 
     const fishGuidanceAnswer = resolveFishGuidanceAnswer(message, directReplyLanguage);
 
     if (fishGuidanceAnswer) {
-      return NextResponse.json({ reply: fishGuidanceAnswer });
+      return countedShortcutResponse(fishGuidanceAnswer);
     }
 
     const vinegarGuidanceAnswer = resolveVinegarGuidanceAnswer(message, directReplyLanguage);
 
     if (vinegarGuidanceAnswer) {
-      return NextResponse.json({ reply: vinegarGuidanceAnswer });
+      return countedShortcutResponse(vinegarGuidanceAnswer);
+    }
+
+    const pomegranateMolassesGuidanceAnswer = resolvePomegranateMolassesGuidanceAnswer(
+      message,
+      conditionName,
+      directReplyLanguage
+    );
+
+    if (pomegranateMolassesGuidanceAnswer) {
+      return countedShortcutResponse(pomegranateMolassesGuidanceAnswer);
     }
 
     const cheeseGuidanceAnswer = resolveCheeseGuidanceAnswer(message, directReplyLanguage);
 
     if (cheeseGuidanceAnswer) {
-      return NextResponse.json({ reply: cheeseGuidanceAnswer });
-    }
-
-    const billingAccess = await fetchBillingAccess(authorization);
-    const limitResponse = aiLimitResponse(billingAccess);
-
-    if (limitResponse) {
-      return limitResponse;
+      return countedShortcutResponse(cheeseGuidanceAnswer);
     }
 
     const hasPremiumAccess = Boolean(billingAccess?.premium || billingAccess?.ai?.unlimited);
