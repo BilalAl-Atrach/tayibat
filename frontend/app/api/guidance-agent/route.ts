@@ -422,6 +422,23 @@ const resolveFishGuidanceAnswer = (message: string, responseLanguage: "English" 
     : "All kinds of fish are allowed.";
 };
 
+const resolveVinegarGuidanceAnswer = (message: string, responseLanguage: "English" | "Arabic") => {
+  const isVinegarQuestion = fuzzyMatchAny(message, [
+    "vinegar",
+    "vinegars",
+    "apple cider vinegar",
+    "\u062e\u0644",
+    "\u0627\u0644\u062e\u0644",
+    "\u062e\u0644 \u0627\u0644\u062a\u0641\u0627\u062d",
+  ]);
+
+  if (!isVinegarQuestion) return null;
+
+  return responseLanguage === "Arabic"
+    ? "\u062c\u0645\u064a\u0639 \u0623\u0646\u0648\u0627\u0639 \u0627\u0644\u062e\u0644 \u063a\u064a\u0631 \u0645\u0633\u0645\u0648\u062d\u0629."
+    : "All kinds of vinegar are not allowed.";
+};
+
 const cheeseAllowedItems = {
   English: [
     "cheddar cheese",
@@ -1049,6 +1066,12 @@ export async function POST(request: Request) {
 
     if (fishGuidanceAnswer) {
       return NextResponse.json({ reply: fishGuidanceAnswer });
+    }
+
+    const vinegarGuidanceAnswer = resolveVinegarGuidanceAnswer(message, directReplyLanguage);
+
+    if (vinegarGuidanceAnswer) {
+      return NextResponse.json({ reply: vinegarGuidanceAnswer });
     }
 
     const cheeseGuidanceAnswer = resolveCheeseGuidanceAnswer(message, directReplyLanguage);
