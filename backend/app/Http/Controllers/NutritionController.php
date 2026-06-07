@@ -131,12 +131,16 @@ public function ask(Request $request)
             ], 401);
         }
 
-        $hasDietPlanAccess = strtolower((string) $user->role) === 'admin'
-            || DietPlanPurchase::where('user_id', $user->id)
-                ->where('condition_id', $condition->id)
-                ->where('duration', $request->duration)
-                ->where('status', 'active')
-                ->exists();
+        $isAdmin = strtolower((string) $user->role) === 'admin';
+        $dietPlanPurchase = DietPlanPurchase::where('user_id', $user->id)
+            ->where('condition_id', $condition->id)
+            ->where('duration', $request->duration)
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->first();
+        $hasDietPlanAccess = $isAdmin || $dietPlanPurchase;
 
         if (! $hasDietPlanAccess) {
             return response()->json([
@@ -147,6 +151,22 @@ public function ask(Request $request)
                 'condition_id' => $condition->id,
                 'plan' => [],
             ], 402);
+        }
+
+        if (! $isAdmin && $dietPlanPurchase?->generated_plan) {
+            $savedPlan = $dietPlanPurchase->generated_plan;
+
+            return response()->json([
+                'condition' => $savedPlan['condition'] ?? $condition->name,
+                'condition_ar' => $savedPlan['condition_ar'] ?? $condition->name_ar,
+                'duration' => $savedPlan['duration'] ?? $request->duration,
+                'days' => $savedPlan['days'] ?? $days,
+                'message' => 'Your saved diet plan is ready.',
+                'plan' => $savedPlan['plan'] ?? [],
+                'generated_at' => $dietPlanPurchase->generated_at,
+                'expires_at' => $dietPlanPurchase->expires_at,
+                'from_saved_plan' => true,
+            ]);
         }
 
         $conditionRules = DietaryRule::where('condition_id', $condition->id)
@@ -300,14 +320,27 @@ public function ask(Request $request)
             ];
         }
 
-        return response()->json([
+        $response = [
             'condition' => $condition->name,
             'condition_ar' => $condition->name_ar,
             'duration' => $request->duration,
             'days' => $days,
             'message' => 'Diet plan generated from existing allowed and moderate food rules.',
             'plan' => $plan,
-        ]);
+        ];
+
+        if (! $isAdmin && $dietPlanPurchase) {
+            $dietPlanPurchase->update([
+                'generated_plan' => $response,
+                'generated_at' => now(),
+            ]);
+
+            $response['generated_at'] = $dietPlanPurchase->fresh()->generated_at;
+            $response['expires_at'] = $dietPlanPurchase->fresh()->expires_at;
+            $response['from_saved_plan'] = false;
+        }
+
+        return response()->json($response);
     }
 
     private function resolveCondition($conditionInput = null, $userId = null): ?Condition

@@ -13,11 +13,17 @@ class DietPlanPurchase extends Model
         'price',
         'status',
         'paid_at',
+        'generated_plan',
+        'generated_at',
+        'expires_at',
     ];
 
     protected $casts = [
         'price' => 'float',
         'paid_at' => 'datetime',
+        'generated_plan' => 'array',
+        'generated_at' => 'datetime',
+        'expires_at' => 'datetime',
     ];
 
     public function user()

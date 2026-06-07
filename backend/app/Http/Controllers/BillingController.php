@@ -37,6 +37,9 @@ class BillingController extends Controller
         $purchasedDurations = DietPlanPurchase::where('user_id', $user->id)
             ->when($conditionId, fn ($query) => $query->where('condition_id', $conditionId))
             ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->pluck('duration')
             ->all();
 
@@ -380,6 +383,7 @@ class BillingController extends Controller
                 'price' => self::DIET_PLAN_PRICES[$validated['duration']],
                 'status' => 'active',
                 'paid_at' => now(),
+                'expires_at' => $this->dietPlanExpiresAt($validated['duration']),
             ]
         );
 
@@ -478,8 +482,19 @@ class BillingController extends Controller
                     'price' => self::DIET_PLAN_PRICES[$transaction->diet_plan_duration],
                     'status' => 'active',
                     'paid_at' => now(),
+                    'expires_at' => $this->dietPlanExpiresAt($transaction->diet_plan_duration),
                 ]
             );
         }
+    }
+
+    private function dietPlanExpiresAt(string $duration)
+    {
+        return match (strtolower(trim($duration))) {
+            '1 week' => now()->addWeek(),
+            '1 month' => now()->addMonth(),
+            '3 months' => now()->addMonths(3),
+            default => now()->addMonth(),
+        };
     }
 }

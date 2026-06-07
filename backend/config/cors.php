@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => array_filter(array_map('trim', explode(',', env(
+        'CORS_ALLOWED_ORIGINS',
+        'https://tayibat.com,https://www.tayibat.com,https://tayibatai.com,https://www.tayibatai.com'
+    )))),
 
     'allowed_origins_patterns' => [],
 
