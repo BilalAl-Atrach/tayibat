@@ -1,10 +1,19 @@
 "use client";
 
 import axios from "axios";
+import dynamic from "next/dynamic";
 import { Download, X, Send, Leaf, ChevronRight, Star, MessageCircle, CalendarDays, Utensils, RefreshCw, Lock, CreditCard } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api from "@/lib/api";
 import MedicalDisclaimerBanner from "@/components/MedicalDisclaimerBanner";
+
+const FoodColumn = dynamic(() => import("@/components/guidance/GuidanceFoodColumn"), {
+  loading: () => <div className="min-h-40 rounded-2xl border border-stone-200 bg-stone-50" />,
+});
+
+const PlanViewer = dynamic(() => import("@/components/guidance/GuidancePlanViewer"), {
+  ssr: false,
+});
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 interface Condition { id: number; name: string; name_ar?: string | null }
@@ -1150,12 +1159,13 @@ export default function GuidanceExperience() {
               localizedConditionName(selectedCondition, language) ||
               (isArabic ? dietPlan.condition_ar || dietPlan.condition : dietPlan.condition) || "Diet Plan"
             }
-            conditionKey={selectedCondition?.name || dietPlan.condition || ""}
             language={language}
             onClose={() => setIsPlanOpen(false)}
             onDownload={handleDownloadPlanPdf}
-            isPremium={isPremium}
             t={t}
+            instructions={getDietPlanInstructions(selectedCondition?.name || dietPlan.condition, language, isPremium)}
+            isImportantInstruction={(instruction) => isMealFlexibilityInstruction(instruction, language)}
+            importantLabel={importantInstructionLabel(language)}
           />
         )}
       </div>
@@ -1199,7 +1209,8 @@ function PaywallCard({
 }
 
 /* ─── FoodColumn ──────────────────────────────────────────────────────────── */
-function FoodColumn({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function LegacyFoodColumn({
   title, rules, language, variant, t,
 }: {
   title: string;
@@ -1293,7 +1304,8 @@ function StatusPill({ status, language }: { status: string; language: GuidanceLa
 }
 
 /* ─── PlanViewer modal ────────────────────────────────────────────────────── */
-function PlanViewer({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function LegacyPlanViewer({
   plan, conditionName, conditionKey, language, onClose, onDownload, isPremium, t,
 }: {
   plan: DietPlanResponse;
