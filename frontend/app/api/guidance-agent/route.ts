@@ -461,8 +461,8 @@ const resolveCoffeeGuidanceAnswer = (message: string, responseLanguage: "English
   if (!isCoffeeQuestion) return null;
 
   return responseLanguage === "Arabic"
-    ? "\u0627\u0644\u0642\u0647\u0648\u0629 \u0645\u0633\u0645\u0648\u062d\u0629 \u0628\u0627\u0639\u062a\u062f\u0627\u0644\u060c 2-3 \u0645\u0631\u0627\u062a \u0641\u064a \u0627\u0644\u0623\u0633\u0628\u0648\u0639."
-    : "Coffee is allowed in moderation, 2-3 times per week.";
+    ? "\u0627\u0644\u0642\u0647\u0648\u0629 \u0645\u0633\u0645\u0648\u062d\u0629 \u0628\u0627\u0639\u062a\u062f\u0627\u0644\u060c 3-5 \u0645\u0631\u0627\u062a \u0641\u064a \u0627\u0644\u0623\u0633\u0628\u0648\u0639."
+    : "Coffee is allowed in moderation, 3-5 times per week.";
 };
 
 const resolvePomegranateMolassesGuidanceAnswer = (
