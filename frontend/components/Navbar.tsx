@@ -1,5 +1,5 @@
 "use client";
-import { useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -9,53 +9,40 @@ import api from "@/lib/api";
 
 const authStorageEvent = "tayibat-auth-storage";
 
-const getStoredUserName = () => {
-  if (typeof window === "undefined") return null;
-  if (!localStorage.getItem("authToken")) return null;
-
-  return localStorage.getItem("userName");
-};
-
-const getStoredUserRole = () => {
-  if (typeof window === "undefined") return null;
-  if (!localStorage.getItem("authToken")) return null;
-
-  return localStorage.getItem("userRole");
-};
-
-const subscribeToAuthStorage = (callback: () => void) => {
-  window.addEventListener("storage", callback);
-  window.addEventListener(authStorageEvent, callback);
-
-  return () => {
-    window.removeEventListener("storage", callback);
-    window.removeEventListener(authStorageEvent, callback);
-  };
-};
-
 const notifyAuthStorageChanged = () => {
   window.dispatchEvent(new Event(authStorageEvent));
 };
 
-const clearAuthCookie = (name: string) => {
-  document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
-};
+interface AuthUser {
+  name?: string | null;
+  role?: string | null;
+}
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const userName = useSyncExternalStore(
-    subscribeToAuthStorage,
-    getStoredUserName,
-    () => null
-  );
-  const userRole = useSyncExternalStore(
-    subscribeToAuthStorage,
-    getStoredUserRole,
-    () => null
-  );
-  const isAdmin = userRole === "admin";
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const userName = user?.name || null;
+  const isAdmin = user?.role === "admin";
   const router = useRouter();
+
+  const loadUser = useCallback(async () => {
+    try {
+      const { data } = await api.get<AuthUser>("/me");
+      setUser(data);
+    } catch {
+      setUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void loadUser();
+    });
+
+    window.addEventListener(authStorageEvent, loadUser);
+    return () => window.removeEventListener(authStorageEvent, loadUser);
+  }, [loadUser]);
 
   const handleLogout = async () => {
     try {
@@ -64,12 +51,8 @@ export default function Navbar() {
       // Local cleanup still logs the browser out if the token is expired.
     }
 
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("selectedCondition");
-    clearAuthCookie("tayibat_role");
+    ["authToken", "userId", "userName", "userRole", "selectedCondition"].forEach((key) => localStorage.removeItem(key));
+    setUser(null);
     notifyAuthStorageChanged();
     setMenuOpen(false);
     router.replace("/");

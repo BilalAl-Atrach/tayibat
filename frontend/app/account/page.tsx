@@ -123,12 +123,6 @@ export default function AccountPage() {
 
   useEffect(() => {
     queueMicrotask(() => {
-      if (!localStorage.getItem("authToken")) {
-        setLoading(false);
-        setNotice("Please log in to view your account.");
-        return;
-      }
-
       void Promise.all([
         loadHistory(),
         api.get<Condition[]>("/conditions").then(({ data }) => {

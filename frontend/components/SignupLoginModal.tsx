@@ -12,12 +12,7 @@ interface AuthUser {
 
 interface AuthResponse {
   user: AuthUser;
-  token: string;
 }
-
-const setAuthCookie = (name: string, value: string) => {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=2592000; samesite=lax`;
-};
 
 export default function SignupLoginModal({ onClose }: { onClose: () => void }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -44,12 +39,8 @@ export default function SignupLoginModal({ onClose }: { onClose: () => void }) {
 
       const user = data.user;
 
-      if (user.id && data.token) {
-        localStorage.setItem("authToken", data.token);
-        localStorage.setItem("userId", user.id.toString());
-        if (user.name) localStorage.setItem("userName", user.name);
-        localStorage.setItem("userRole", user.role || "user");
-        setAuthCookie("tayibat_role", user.role || "user");
+      if (user.id) {
+        ["authToken", "userId", "userName", "userRole"].forEach((key) => localStorage.removeItem(key));
 
         const savedCondition = user.condition || null;
 

@@ -11,6 +11,7 @@ use App\Models\Food;
 use App\Models\GlobalRules;
 use App\Models\User;
 use App\Support\RiceGuidance;
+use Illuminate\Support\Facades\Cache;
 
 class NutritionController extends Controller
 {
@@ -24,7 +25,9 @@ class NutritionController extends Controller
     // ✅ Step 1: Fetch all conditions
     public function getConditions()
     {
-        return response()->json(Condition::all());
+        return response()->json(
+            Cache::remember('conditions:v1', now()->addMinutes(10), fn () => Condition::all())
+        );
     }
 
     // ✅ Step 2: Handle food questions
@@ -169,20 +172,22 @@ public function ask(Request $request)
             ]);
         }
 
-        $conditionRules = DietaryRule::where('condition_id', $condition->id)
-            ->whereIn('status', ['allowed', 'moderate'])
-            ->with('food:id,name,name_ar,meal_type,meal_role')
-            ->get();
+        $rules = Cache::remember('diet-plan-rules:v1:' . $condition->id, now()->addMinutes(5), function () use ($condition) {
+            $conditionRules = DietaryRule::where('condition_id', $condition->id)
+                ->whereIn('status', ['allowed', 'moderate'])
+                ->with('food:id,name,name_ar,meal_type,meal_role')
+                ->get();
 
-        $globalRules = GlobalRules::whereIn('status', ['allowed', 'moderate'])
-            ->with('food:id,name,name_ar,meal_type,meal_role')
-            ->get();
+            $globalRules = GlobalRules::whereIn('status', ['allowed', 'moderate'])
+                ->with('food:id,name,name_ar,meal_type,meal_role')
+                ->get();
 
-        $rules = $conditionRules
-            ->concat($globalRules)
-            ->filter(fn ($rule) => $rule->food)
-            ->unique(fn ($rule) => $rule->food->id . '-' . $rule->status)
-            ->values();
+            return $conditionRules
+                ->concat($globalRules)
+                ->filter(fn ($rule) => $rule->food)
+                ->unique(fn ($rule) => $rule->food->id . '-' . $rule->status)
+                ->values();
+        });
 
         if ($rules->isEmpty()) {
             return response()->json([

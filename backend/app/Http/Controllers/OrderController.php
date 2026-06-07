@@ -33,6 +33,6 @@ class OrderController extends Controller
 
     public function index()
     {
-        return response()->json(Order::with(['user', 'product'])->latest()->get());
+        return response()->json(Order::with(['user', 'product'])->latest()->limit(200)->get());
     }
 }

@@ -8,6 +8,7 @@ use App\Models\Food;
 use Illuminate\Http\Request;
 use App\Models\GlobalRules;
 use App\Models\Subscription;
+use Illuminate\Support\Facades\Cache;
 
 class DietaryRuleController extends Controller
 {
@@ -26,15 +27,13 @@ class DietaryRuleController extends Controller
         }
 
         // Fetch condition‑specific rules
-        $conditionRules = DietaryRule::where('condition_id', $condition->id)
-            ->with('food:id,name,name_ar,meal_type,meal_role')
-            ->get();
+        $conditionRules = null;
 
         // Fetch global rules (apply to all conditions)
-        $globalRules = GlobalRules::with('food:id,name,name_ar,meal_type,meal_role')->get();
+        $globalRules = null;
 
         // Merge both sets
-        $allRules = $conditionRules->concat($globalRules);
+        $allRules = null;
 
         $user = $request->user('sanctum') ?: auth('sanctum')->user();
         $hasPremiumAccess = $user
@@ -47,6 +46,33 @@ class DietaryRuleController extends Controller
                 })
                 ->exists()
             : false;
+
+        $allRules = Cache::remember(
+            'rules:v2:' . $condition->id . ':' . ($hasPremiumAccess ? 'premium' : 'free'),
+            now()->addMinutes(5),
+            function () use ($condition, $hasPremiumAccess) {
+                $conditionRules = DietaryRule::where('condition_id', $condition->id)
+                    ->with('food:id,name,name_ar,meal_type,meal_role')
+                    ->get();
+
+                $globalRules = GlobalRules::with('food:id,name,name_ar,meal_type,meal_role')->get();
+                $rules = $conditionRules->concat($globalRules);
+
+                if ($hasPremiumAccess) {
+                    return $rules->values();
+                }
+
+                $allowedAndModerate = $rules
+                    ->filter(fn ($rule) => $rule->status !== 'avoid')
+                    ->take(5);
+
+                $avoid = $rules
+                    ->filter(fn ($rule) => $rule->status === 'avoid')
+                    ->take(5);
+
+                return $allowedAndModerate->concat($avoid)->values();
+            }
+        );
 
         if (! $hasPremiumAccess) {
             $allowedAndModerate = $allRules
@@ -78,7 +104,7 @@ class DietaryRuleController extends Controller
         }
 
         $foodText = $this->normalizeFoodText($request->query('food'));
-        $foods = Food::all(['id', 'name', 'name_ar'])
+        $foods = Cache::remember('foods:lookup:v1', now()->addMinutes(10), fn () => Food::all(['id', 'name', 'name_ar']))
             ->sortByDesc(fn ($food) => strlen((string) $food->name));
 
         $food = $foods->first(function ($food) use ($foodText) {

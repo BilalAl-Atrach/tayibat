@@ -9,7 +9,7 @@ class ContactMessageController extends Controller
 {
     public function index()
     {
-        return response()->json(ContactMessage::latest()->get());
+        return response()->json(ContactMessage::latest()->limit(200)->get());
     }
 
     public function store(Request $request)

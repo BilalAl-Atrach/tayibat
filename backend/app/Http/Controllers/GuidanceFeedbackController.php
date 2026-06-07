@@ -11,7 +11,7 @@ class GuidanceFeedbackController extends Controller
     public function index()
     {
         return response()->json(
-            GuidanceFeedback::with(['user', 'condition'])->latest()->get()
+            GuidanceFeedback::with(['user', 'condition'])->latest()->limit(200)->get()
         );
     }
 

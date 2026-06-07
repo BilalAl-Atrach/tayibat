@@ -1,5 +1,6 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 interface ChatMessage {
@@ -77,6 +78,7 @@ interface AssistantDashboard {
 
 const apiBaseUrl =
   process.env.LARAVEL_API_BASE_URL || "https://tayibat-production.up.railway.app/api";
+const authCookieName = "tayibat_auth";
 
 const fetchJson = async <T,>(path: string, authorization?: string | null): Promise<T> => {
   const response = await fetch(`${apiBaseUrl}${path}`, {
@@ -1163,7 +1165,9 @@ export async function POST(request: Request) {
       });
     }
 
-    const authorization = request.headers.get("authorization");
+    const cookieStore = await cookies();
+    const token = cookieStore.get(authCookieName)?.value;
+    const authorization = token ? `Bearer ${token}` : null;
     const conditionName = await resolveConditionName(body.condition, body.conditionName);
 
     if (!conditionName) {

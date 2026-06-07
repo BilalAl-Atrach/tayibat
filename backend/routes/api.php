@@ -12,7 +12,7 @@ use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\GuidanceFeedbackController;
 
 Route::get('/conditions', [NutritionController::class, 'getConditions']);
-Route::post('/ask', [NutritionController::class, 'ask']);
+Route::post('/ask', [NutritionController::class, 'ask'])->middleware('throttle:ai');
 Route::match(['get', 'post'], '/billing/whish/callback', [BillingController::class, 'callback']);
 
 Route::get('/rules/{condition}', [DietaryRuleController::class, 'getRules']);
@@ -22,8 +22,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user/condition', [UserController::class, 'getCondition']);
     Route::post('/user/condition', [UserController::class, 'updateCondition']);
-    Route::post('/guidance-feedback', [GuidanceFeedbackController::class, 'store']);
-    Route::post('/diet-plan', [NutritionController::class, 'dietPlan']);
+    Route::post('/guidance-feedback', [GuidanceFeedbackController::class, 'store'])->middleware('throttle:feedback');
+    Route::post('/diet-plan', [NutritionController::class, 'dietPlan'])->middleware('throttle:diet-plan');
     Route::get('/rules/{condition}/lookup-food', [DietaryRuleController::class, 'lookupFoodRule']);
     Route::get('/billing/access', [BillingController::class, 'access']);
     Route::get('/billing/history', [BillingController::class, 'history']);
@@ -69,4 +69,4 @@ Route::get('/testimonials', [TestimonialController::class, 'index']);
 Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class,'login']);
+Route::post('/login', [AuthController::class,'login'])->middleware('throttle:login');

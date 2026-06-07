@@ -322,7 +322,7 @@ const getApiMessage = (error: unknown, fallback: string) => {
   }
   return fallback;
 };
-const getUserId = () => (typeof window !== "undefined" ? localStorage.getItem("userId") || "guest" : "guest");
+const getUserId = () => "secure-user";
 const getDietPlanKey = (id: number) => `tayibat-diet-plan:${getUserId()}:${id}`;
 const getChatHistoryKey = (id: number) => `tayibat-chat-history:${getUserId()}:${id}`;
 const escapeHtml = (v: string | number | null | undefined) =>
@@ -409,9 +409,6 @@ export default function GuidanceExperience() {
   }, [notice]);
 
   const loadBillingAccess = useCallback(async (force = false) => {
-    const authToken = localStorage.getItem("authToken");
-    if (!authToken) { setBillingAccess(null); return; }
-
     const requestKey = String(selectedConditionId || "none");
     if (!force && loadedBillingKeyRef.current === requestKey) return;
     loadedBillingKeyRef.current = requestKey;
@@ -428,9 +425,6 @@ export default function GuidanceExperience() {
   }, [selectedConditionId]);
 
   const startCheckout = async (type: "premium" | "diet_plan", duration?: string) => {
-    const authToken = localStorage.getItem("authToken");
-    if (!authToken) { setNotice("Please log in before upgrading or buying a diet plan."); return; }
-
     setLoading((s) => ({ ...s, billing: true }));
     setNotice("");
     try {
@@ -471,10 +465,8 @@ export default function GuidanceExperience() {
       .then((data) => {
         setConditions(data);
         const stored = localStorage.getItem("selectedCondition");
-        const authToken = localStorage.getItem("authToken");
         const match = data.find((c) => c.name === stored);
         if (match) setSelectedCondition((current) => current?.id === match.id ? current : match);
-        if (!authToken) return;
         api.get<{ condition?: string | null }>("/user/condition")
           .then(({ data: ud }) => {
             const db = data.find((c) => c.name === ud.condition);
@@ -556,12 +548,6 @@ export default function GuidanceExperience() {
   const visibleAvoidRules = isPremium ? avoidRules : avoidRules.slice(0, 5);
 
   const handleSelectCondition = async (condition: Condition) => {
-    const authToken = localStorage.getItem("authToken");
-    if (!authToken) {
-      setFeedbackNotice(null);
-      setNotice("You must log in to select a goal.");
-      return;
-    }
     setSelectedCondition(condition); setDietPlan(null); setIsPlanOpen(false);
     localStorage.setItem("selectedCondition", condition.name);
     setActiveTab("foods");
@@ -645,9 +631,7 @@ export default function GuidanceExperience() {
   const handleChatSend = async () => {
     if (!selectedCondition) { setNotice("Select a health goal first."); return; }
     if (!chatMessage.trim()) return;
-    if (!localStorage.getItem("authToken")) { setNotice("Please log in to use the AI guide."); return; }
     const outgoing = chatMessage.trim();
-    const authToken = localStorage.getItem("authToken");
     const save = (msgs: ChatMessage[]) => {
       setChatHistory((curr) => {
         const next = [...curr, ...msgs];
@@ -663,8 +647,6 @@ export default function GuidanceExperience() {
       const { data } = await axios.post<{ reply: string }>("/api/guidance-agent", {
         condition: selectedCondition.id, conditionName: selectedCondition.name,
         language, message: outgoing, chatHistory,
-      }, {
-        headers: { Authorization: `Bearer ${authToken}` },
       });
       await loadBillingAccess(true);
       save([{ role: "assistant", text: data.reply }]);
@@ -682,8 +664,6 @@ export default function GuidanceExperience() {
   };
 
   const handleFeedbackSubmit = async () => {
-    const authToken = localStorage.getItem("authToken");
-    if (!authToken) { setFeedbackNotice({ message: t.feedbackLoginRequired, type: "error" }); return; }
     if (!selectedCondition) { setFeedbackNotice({ message: t.feedbackSelectGoal, type: "error" }); return; }
     if (!feedbackMessage.trim()) return;
     setLoading((s) => ({ ...s, feedback: true })); setFeedbackNotice(null);
