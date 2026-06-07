@@ -279,6 +279,15 @@ const resolveReplyLanguage = (
   responseLanguage: "English" | "Arabic"
 ) => (hasArabicText(message) ? "Arabic" : responseLanguage);
 
+const hasDiabetesGoal = (conditionName: string) => {
+  const normalizedCondition = normalizeFoodText(conditionName);
+
+  return normalizedCondition.includes("diabetes") ||
+    normalizedCondition.includes("diabetic") ||
+    normalizedCondition.includes("\u0627\u0644\u0633\u0643\u0631\u064a") ||
+    normalizedCondition.includes("\u0633\u0643\u0631\u064a");
+};
+
 const greetingMessages = new Set([
   "hi",
   "hello",
@@ -439,6 +448,23 @@ const resolveVinegarGuidanceAnswer = (message: string, responseLanguage: "Englis
     : "All kinds of vinegar are not allowed.";
 };
 
+const resolveCoffeeGuidanceAnswer = (message: string, responseLanguage: "English" | "Arabic") => {
+  const isCoffeeQuestion = fuzzyMatchAny(message, [
+    "coffee",
+    "cofee",
+    "caffeine",
+    "\u0642\u0647\u0648\u0629",
+    "\u0627\u0644\u0642\u0647\u0648\u0629",
+    "\u0643\u0627\u0641\u064a\u064a\u0646",
+  ]);
+
+  if (!isCoffeeQuestion) return null;
+
+  return responseLanguage === "Arabic"
+    ? "\u0627\u0644\u0642\u0647\u0648\u0629 \u0645\u0633\u0645\u0648\u062d\u0629 \u0628\u0627\u0639\u062a\u062f\u0627\u0644\u060c 2-3 \u0645\u0631\u0627\u062a \u0641\u064a \u0627\u0644\u0623\u0633\u0628\u0648\u0639."
+    : "Coffee is allowed in moderation, 2-3 times per week.";
+};
+
 const resolvePomegranateMolassesGuidanceAnswer = (
   message: string,
   conditionName: string,
@@ -469,6 +495,28 @@ const resolvePomegranateMolassesGuidanceAnswer = (
   return hasDiabetes
     ? "Pomegranate molasses is not allowed for diabetes because it contains a high amount of sugar."
     : "Pomegranate molasses is allowed in moderation.";
+};
+
+const resolveDiabetesJamsGuidanceAnswer = (
+  message: string,
+  conditionName: string,
+  responseLanguage: "English" | "Arabic"
+) => {
+  if (!hasDiabetesGoal(conditionName)) return null;
+
+  const isJamQuestion = fuzzyMatchAny(message, [
+    "jam",
+    "jams",
+    "marmalade",
+    "\u0645\u0631\u0628\u0649",
+    "\u0627\u0644\u0645\u0631\u0628\u0649",
+  ]);
+
+  if (!isJamQuestion) return null;
+
+  return responseLanguage === "Arabic"
+    ? "\u062c\u0645\u064a\u0639 \u0623\u0646\u0648\u0627\u0639 \u0627\u0644\u0645\u0631\u0628\u0649 \u063a\u064a\u0631 \u0645\u0633\u0645\u0648\u062d\u0629 \u0644\u0645\u0631\u0636\u0649 \u0627\u0644\u0633\u0643\u0631\u064a \u0644\u0623\u0646\u0647\u0627 \u062a\u062d\u062a\u0648\u064a \u0639\u0644\u0649 \u0643\u0645\u064a\u0629 \u0639\u0627\u0644\u064a\u0629 \u0645\u0646 \u0627\u0644\u0633\u0643\u0631."
+    : "All kinds of jams are not allowed for diabetes because they contain a high amount of sugar.";
 };
 
 const cheeseAllowedItems = {
@@ -933,6 +981,53 @@ const resolveDirectRuleContext = (message: string, rules: FoodRule[]) => {
     .join(" ");
 };
 
+const resolveDiabetesFreshJuicesGuidanceAnswer = (
+  message: string,
+  conditionName: string,
+  rules: FoodRule[],
+  responseLanguage: "English" | "Arabic"
+) => {
+  if (!hasDiabetesGoal(conditionName)) return null;
+
+  const isJuiceQuestion = fuzzyMatchAny(message, [
+    "juice",
+    "juices",
+    "fresh juice",
+    "fresh juices",
+    "\u0639\u0635\u064a\u0631",
+    "\u0639\u0635\u0627\u0626\u0631",
+    "\u0639\u0635\u064a\u0631 \u0637\u0627\u0632\u062c",
+    "\u0639\u0635\u0627\u0626\u0631 \u0637\u0627\u0632\u062c\u0629",
+  ]);
+
+  if (!isJuiceQuestion) return null;
+
+  const freshJuicesRule = rules.find((rule) => {
+    const foodName = normalizeFoodText(rule.food?.name || "");
+    const arabicFoodName = normalizeFoodText(rule.food?.name_ar || "");
+
+    return foodName === "fresh juices" || arabicFoodName === normalizeFoodText("\u0639\u0635\u0627\u0626\u0631 \u0637\u0627\u0632\u062c\u0629");
+  });
+
+  if (!freshJuicesRule) return null;
+
+  if (responseLanguage === "Arabic") {
+    const status = freshJuicesRule.status === "allowed"
+      ? "\u0645\u0633\u0645\u0648\u062d"
+      : freshJuicesRule.status === "moderate"
+        ? "\u0645\u0639\u062a\u062f\u0644"
+        : "\u063a\u064a\u0631 \u0645\u0633\u0645\u0648\u062d";
+    const reason = freshJuicesRule.reason_ar || freshJuicesRule.reason || "\u062d\u0633\u0628 \u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0639\u0635\u0627\u0626\u0631 \u0627\u0644\u0637\u0627\u0632\u062c\u0629.";
+
+    return `\u0627\u0644\u062d\u0627\u0644\u0629: ${status}\u060c \u0627\u0644\u0633\u0628\u0628: ${reason}`;
+  }
+
+  const status = freshJuicesRule.status.charAt(0).toUpperCase() + freshJuicesRule.status.slice(1);
+  const reason = freshJuicesRule.reason || "Based on the Fresh Juices backend rule.";
+
+  return `Status: ${status}, Reason: ${reason}`;
+};
+
 const lookupFullFoodRuleContext = async (
   message: string,
   conditionName: string,
@@ -1123,6 +1218,12 @@ export async function POST(request: Request) {
       return countedShortcutResponse(vinegarGuidanceAnswer);
     }
 
+    const coffeeGuidanceAnswer = resolveCoffeeGuidanceAnswer(message, directReplyLanguage);
+
+    if (coffeeGuidanceAnswer) {
+      return countedShortcutResponse(coffeeGuidanceAnswer);
+    }
+
     const pomegranateMolassesGuidanceAnswer = resolvePomegranateMolassesGuidanceAnswer(
       message,
       conditionName,
@@ -1131,6 +1232,16 @@ export async function POST(request: Request) {
 
     if (pomegranateMolassesGuidanceAnswer) {
       return countedShortcutResponse(pomegranateMolassesGuidanceAnswer);
+    }
+
+    const diabetesJamsGuidanceAnswer = resolveDiabetesJamsGuidanceAnswer(
+      message,
+      conditionName,
+      directReplyLanguage
+    );
+
+    if (diabetesJamsGuidanceAnswer) {
+      return countedShortcutResponse(diabetesJamsGuidanceAnswer);
     }
 
     const cheeseGuidanceAnswer = resolveCheeseGuidanceAnswer(message, directReplyLanguage);
@@ -1142,6 +1253,18 @@ export async function POST(request: Request) {
     const hasPremiumAccess = Boolean(billingAccess?.premium || billingAccess?.ai?.unlimited);
     const assistantDashboard = await fetchAssistantDashboard(authorization);
     const rules = await fetchJson<FoodRule[]>(`/rules/${encodeURIComponent(conditionName)}`, authorization);
+
+    const diabetesFreshJuicesGuidanceAnswer = resolveDiabetesFreshJuicesGuidanceAnswer(
+      message,
+      conditionName,
+      rules,
+      directReplyLanguage
+    );
+
+    if (diabetesFreshJuicesGuidanceAnswer) {
+      return countedShortcutResponse(diabetesFreshJuicesGuidanceAnswer);
+    }
+
     const rulesContext = formatRulesForAgent(rules);
     const directRuleContext = resolveDirectRuleContext(message, rules);
     const fullFoodRuleContext = await lookupFullFoodRuleContext(message, conditionName, authorization);
