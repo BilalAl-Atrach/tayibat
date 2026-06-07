@@ -2,53 +2,10 @@
 
 import { Download, X } from "lucide-react";
 
-type GuidanceLanguage = "en" | "ar";
-
-interface PlanMeal {
-  meal: string;
-  food: string;
-  food_ar?: string | null;
-  status: string;
-}
-
-interface PlanDay {
-  day: number;
-  label: string;
-  meals: PlanMeal[];
-}
-
-interface DietPlanResponse {
-  condition?: string;
-  duration?: string;
-  days?: number;
-  plan: PlanDay[];
-}
-
-interface GuidanceText {
-  downloadPdf: string;
-  closePlan: string;
-  instructions: string;
-}
-
-const durationLabels: Record<GuidanceLanguage, Record<string, string>> = {
-  en: { "1 week": "1 week", "1 month": "1 month", "3 months": "3 months" },
-  ar: { "1 week": "أسبوع واحد", "1 month": "شهر واحد", "3 months": "3 أشهر" },
-};
-
-const mealLabels: Record<GuidanceLanguage, Record<string, string>> = {
-  en: { Breakfast: "Breakfast", Lunch: "Lunch", Dinner: "Dinner", Snack: "Snack" },
-  ar: { Breakfast: "الفطور", Lunch: "الغداء", Dinner: "العشاء", Snack: "وجبة خفيفة" },
-};
-
-const statusLabels: Record<GuidanceLanguage, Record<string, string>> = {
-  en: { allowed: "Allowed", moderate: "Moderate", avoid: "Avoid" },
-  ar: { allowed: "مسموح", moderate: "معتدل", avoid: "تجنب" },
-};
-
-const translateDayLabel = (day: PlanDay, language: GuidanceLanguage) =>
-  language === "ar" ? `اليوم ${day.day}` : day.label;
-
-const translateMeal = (meal: string, language: GuidanceLanguage) => mealLabels[language][meal] || meal;
+import type { DietPlanResponse, GuidanceLanguage } from "./types";
+import type { GuidanceText } from "./text";
+import { durationLabels, statusLabels } from "./text";
+import { translateDayLabel, translateMeal } from "./helpers";
 
 function StatusPill({ status, language }: { status: string; language: GuidanceLanguage }) {
   const colors: Record<string, string> = {

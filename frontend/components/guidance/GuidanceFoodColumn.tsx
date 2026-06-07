@@ -1,28 +1,8 @@
 "use client";
 
-type GuidanceLanguage = "en" | "ar";
-
-interface FoodRule {
-  id: number;
-  food?: { name: string; name_ar?: string | null };
-  status: "allowed" | "avoid" | "moderate";
-  reason?: string | null;
-  reason_ar?: string | null;
-  max_servings?: string | number | null;
-}
-
-interface GuidanceText {
-  food: string;
-  status: string;
-  reason: string;
-  noMatchingRules: string;
-  maxServings: string;
-}
-
-const statusLabels: Record<GuidanceLanguage, Record<string, string>> = {
-  en: { allowed: "Allowed", moderate: "Moderate", avoid: "Avoid" },
-  ar: { allowed: "مسموح", moderate: "معتدل", avoid: "تجنب" },
-};
+import type { FoodRule, GuidanceLanguage } from "./types";
+import type { GuidanceText } from "./text";
+import { statusLabels } from "./text";
 
 const localizedFoodName = (
   food: { name?: string | null; name_ar?: string | null } | null | undefined,
