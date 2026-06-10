@@ -467,6 +467,52 @@ const resolveCoffeeGuidanceAnswer = (message: string, responseLanguage: "English
     : "Coffee is allowed in moderation, 3-5 times per week.";
 };
 
+const resolveDessertGuidanceAnswer = (
+  message: string,
+  conditionName: string,
+  responseLanguage: "English" | "Arabic"
+) => {
+  const isDessertQuestion = fuzzyMatchAny(message, [
+    "dessert",
+    "desserts",
+    "sweet",
+    "sweets",
+    "healthy dessert",
+    "healthy desserts",
+    "\u062d\u0644\u0649",
+    "\u062d\u0644\u0648\u064a\u0627\u062a",
+    "\u062d\u0644\u0648",
+    "\u062a\u062d\u0644\u0627\u064a\u0629",
+    "\u062a\u062d\u0644\u064a\u0629",
+  ]);
+
+  if (!isDessertQuestion) return null;
+
+  const hasDiabetes = hasDiabetesGoal(conditionName);
+
+  if (responseLanguage === "Arabic") {
+    const options = [
+      "\u0641\u0631\u0627\u0648\u0644\u0629 \u0645\u063a\u0637\u0627\u0629 \u0628\u0627\u0644\u0634\u0648\u0643\u0648\u0644\u0627\u062a\u0629 \u0627\u0644\u062f\u0627\u0643\u0646\u0629 \u0648\u0645\u063a\u0644\u0641\u0629 \u0628\u0627\u0644\u0633\u0645\u0633\u0645",
+      ...(!hasDiabetes
+        ? ["\u062a\u0645\u0631 \u0645\u0639 \u0645\u0643\u0633\u0631\u0627\u062a \u0645\u063a\u0637\u0649 \u0628\u0627\u0644\u0634\u0648\u0643\u0648\u0644\u0627\u062a\u0629 \u0627\u0644\u062f\u0627\u0643\u0646\u0629 \u0648\u0645\u063a\u0644\u0641 \u0628\u0627\u0644\u0633\u0645\u0633\u0645"]
+        : []),
+      "\u0623\u0641\u0648\u0643\u0627\u062f\u0648 \u0645\u0639 \u0627\u0644\u0639\u0633\u0644 \u0648\u0635\u0648\u0635 \u0627\u0644\u0634\u0648\u0643\u0648\u0644\u0627\u062a\u0629 \u0627\u0644\u062f\u0627\u0643\u0646\u0629",
+    ];
+
+    return `\u062e\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u062d\u0644\u0648\u0649 \u0627\u0644\u0645\u0646\u0627\u0633\u0628\u0629:\n${options.map((option, index) => `${index + 1}. ${option}`).join("\n")}`;
+  }
+
+  const options = [
+    "Strawberry covered with dark chocolate and coated with sesame.",
+    ...(!hasDiabetes
+      ? ["Dates with nuts covered with dark chocolate and coated with sesame."]
+      : []),
+    "Avocado with honey and dark chocolate sauce.",
+  ];
+
+  return `Suggested dessert options:\n${options.map((option, index) => `${index + 1}. ${option}`).join("\n")}`;
+};
+
 const resolvePomegranateMolassesGuidanceAnswer = (
   message: string,
   conditionName: string,
@@ -1226,6 +1272,16 @@ export async function POST(request: Request) {
 
     if (coffeeGuidanceAnswer) {
       return countedShortcutResponse(coffeeGuidanceAnswer);
+    }
+
+    const dessertGuidanceAnswer = resolveDessertGuidanceAnswer(
+      message,
+      conditionName,
+      directReplyLanguage
+    );
+
+    if (dessertGuidanceAnswer) {
+      return countedShortcutResponse(dessertGuidanceAnswer);
     }
 
     const pomegranateMolassesGuidanceAnswer = resolvePomegranateMolassesGuidanceAnswer(
