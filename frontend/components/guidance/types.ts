@@ -28,6 +28,9 @@ export interface DietPlanResponse {
   days?: number;
   message?: string;
   plan: PlanDay[];
+  generated_at?: string | null;
+  expires_at?: string | null;
+  from_saved_plan?: boolean;
 }
 
 export interface ChatMessage { role: "user" | "assistant"; text: string }
@@ -43,6 +46,15 @@ export interface StoredChatHistory {
   conditionId: number;
   conditionName: string;
   messages: ChatMessage[];
+}
+
+export interface GuidanceChatResponse {
+  condition_id: number;
+  messages: ChatMessage[];
+}
+
+export interface SavedDietPlanResponse {
+  diet_plan: DietPlanResponse | null;
 }
 
 export interface BillingAccess {

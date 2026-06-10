@@ -13,9 +13,9 @@ import type {
   Condition,
   DietPlanResponse,
   FoodRule,
+  GuidanceChatResponse,
   GuidanceLanguage,
-  StoredChatHistory,
-  StoredDietPlan,
+  SavedDietPlanResponse,
 } from "@/components/guidance/types";
 import {
   durationLabels,
@@ -50,9 +50,16 @@ const getApiMessage = (error: unknown, fallback: string) => {
   }
   return fallback;
 };
-const getUserId = () => "secure-user";
-const getDietPlanKey = (id: number) => `tayibat-diet-plan:${getUserId()}:${id}`;
-const getChatHistoryKey = (id: number) => `tayibat-chat-history:${getUserId()}:${id}`;
+type CurrentUser = {
+  id?: number | string;
+  email?: string | null;
+};
+const getUserStorageKey = (user: CurrentUser) => {
+  if (user.id !== undefined && user.id !== null) return `user-${user.id}`;
+  if (user.email) return `email-${user.email.toLowerCase()}`;
+  return null;
+};
+const getSelectedConditionKey = (userKey: string) => `tayibat-selected-condition:${userKey}`;
 const TABS: { id: ActiveTab; icon: React.ReactNode; enLabel: string; arLabel: string }[] = [
   { id: "goals",    icon: <Leaf className="h-4 w-4" />,          enLabel: "Goals",    arLabel: "الأهداف"  },
   { id: "foods",    icon: <Utensils className="h-4 w-4" />,      enLabel: "Foods",    arLabel: "الطعام"   },
@@ -77,6 +84,7 @@ export default function GuidanceExperience() {
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackNotice, setFeedbackNotice] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [activeTab, setActiveTab]     = useState<ActiveTab>("goals");
+  const [userStorageKey, setUserStorageKey] = useState<string | null>(null);
   const [language, setLanguage]       = useState<GuidanceLanguage>(() => {
     if (typeof window === "undefined") return "en";
     const s = localStorage.getItem("tayibat-guidance-language");
@@ -106,6 +114,26 @@ export default function GuidanceExperience() {
     setLanguage(next);
     localStorage.setItem("tayibat-guidance-language", next);
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    api.get<CurrentUser>("/me")
+      .then(({ data }) => {
+        if (cancelled) return;
+        setUserStorageKey(getUserStorageKey(data));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setUserStorageKey(null);
+        setChatHistory([]);
+        setDietPlan(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!notice) return;
@@ -173,14 +201,14 @@ export default function GuidanceExperience() {
     conditionsRequest
       .then((data) => {
         setConditions(data);
-        const stored = localStorage.getItem("selectedCondition");
+        const stored = userStorageKey ? localStorage.getItem(getSelectedConditionKey(userStorageKey)) : null;
         const match = data.find((c) => c.name === stored);
         if (match) setSelectedCondition((current) => current?.id === match.id ? current : match);
         api.get<{ condition?: string | null }>("/user/condition")
           .then(({ data: ud }) => {
             const db = data.find((c) => c.name === ud.condition);
             if (db) {
-              localStorage.setItem("selectedCondition", db.name);
+              if (userStorageKey) localStorage.setItem(getSelectedConditionKey(userStorageKey), db.name);
               setSelectedCondition((current) => current?.id === db.id ? current : db);
             }
           })
@@ -190,7 +218,7 @@ export default function GuidanceExperience() {
       })
       .catch((e) => setNotice(getApiMessage(e, "Unable to load health goals.")))
       .finally(() => setLoading((s) => ({ ...s, conditions: false })));
-  }, []);
+  }, [userStorageKey]);
 
   /* Load food rules */
   useEffect(() => {
@@ -220,31 +248,56 @@ export default function GuidanceExperience() {
 
   /* Restore diet plan */
   useEffect(() => {
-    if (!selectedCondition) return;
-    queueMicrotask(() => {
-      const saved = localStorage.getItem(getDietPlanKey(selectedCondition.id));
-      if (!saved) { setDietPlan(null); return; }
-      try {
-        const parsed = JSON.parse(saved) as StoredDietPlan;
-        if (parsed.conditionId !== selectedCondition.id || !parsed.dietPlan) { setDietPlan(null); return; }
-        setPlanDuration(parsed.duration || durations[0]);
-        setDietPlan(parsed.dietPlan);
-      } catch { localStorage.removeItem(getDietPlanKey(selectedCondition.id)); setDietPlan(null); }
-    });
+    if (!selectedCondition) {
+      queueMicrotask(() => setDietPlan(null));
+      return;
+    }
+
+    let cancelled = false;
+
+    api.get<SavedDietPlanResponse>("/diet-plan/saved", {
+      params: { condition_id: selectedCondition.id },
+    })
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (!data.diet_plan) {
+          setDietPlan(null);
+          return;
+        }
+        setDietPlan(data.diet_plan);
+        if (data.diet_plan.duration) setPlanDuration(data.diet_plan.duration);
+      })
+      .catch(() => {
+        if (!cancelled) setDietPlan(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedCondition]);
 
   /* Restore chat */
   useEffect(() => {
-    if (!selectedCondition) return;
-    queueMicrotask(() => {
-      const saved = localStorage.getItem(getChatHistoryKey(selectedCondition.id));
-      if (!saved) { setChatHistory([]); return; }
-      try {
-        const parsed = JSON.parse(saved) as StoredChatHistory;
-        if (parsed.conditionId !== selectedCondition.id || !Array.isArray(parsed.messages)) { setChatHistory([]); return; }
-        setChatHistory(parsed.messages);
-      } catch { localStorage.removeItem(getChatHistoryKey(selectedCondition.id)); setChatHistory([]); }
-    });
+    if (!selectedCondition) {
+      queueMicrotask(() => setChatHistory([]));
+      return;
+    }
+
+    let cancelled = false;
+
+    api.get<GuidanceChatResponse>("/guidance-chat", {
+      params: { condition_id: selectedCondition.id },
+    })
+      .then(({ data }) => {
+        if (!cancelled) setChatHistory(Array.isArray(data.messages) ? data.messages : []);
+      })
+      .catch(() => {
+        if (!cancelled) setChatHistory([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedCondition]);
 
   useEffect(() => {
@@ -258,7 +311,7 @@ export default function GuidanceExperience() {
 
   const handleSelectCondition = async (condition: Condition) => {
     setSelectedCondition(condition); setDietPlan(null); setIsPlanOpen(false);
-    localStorage.setItem("selectedCondition", condition.name);
+    if (userStorageKey) localStorage.setItem(getSelectedConditionKey(userStorageKey), condition.name);
     setActiveTab("foods");
     try { await api.post("/user/condition", { condition: condition.name }); }
     catch (e) { setNotice(getApiMessage(e, "Goal selected, but couldn't be saved to your profile.")); }
@@ -270,7 +323,7 @@ export default function GuidanceExperience() {
     setFeedbackRating("5"); setFeedbackNotice(null); setNotice("");
     loadedRulesKeyRef.current = null;
     loadedBillingKeyRef.current = null;
-    localStorage.removeItem("selectedCondition");
+    if (userStorageKey) localStorage.removeItem(getSelectedConditionKey(userStorageKey));
     setActiveTab("goals");
   };
 
@@ -287,10 +340,6 @@ export default function GuidanceExperience() {
       });
       setDietPlan(data); setIsPlanOpen(true);
       await loadBillingAccess(true);
-      localStorage.setItem(getDietPlanKey(selectedCondition.id), JSON.stringify({
-        conditionId: selectedCondition.id, conditionName: selectedCondition.name,
-        duration: planDuration, dietPlan: data,
-      } satisfies StoredDietPlan));
     } catch (e) { setNotice(getApiMessage(e, "Diet plan generation is unavailable.")); }
     finally { setLoading((s) => ({ ...s, plan: false })); }
   };
@@ -344,9 +393,12 @@ export default function GuidanceExperience() {
     const save = (msgs: ChatMessage[]) => {
       setChatHistory((curr) => {
         const next = [...curr, ...msgs];
-        localStorage.setItem(getChatHistoryKey(selectedCondition.id), JSON.stringify({
-          conditionId: selectedCondition.id, conditionName: selectedCondition.name, messages: next,
-        } satisfies StoredChatHistory));
+        api.put("/guidance-chat", {
+          condition_id: selectedCondition.id,
+          messages: next,
+        }).catch(() => {
+          setNotice("Your answer was shown, but the chat history could not be saved.");
+        });
         return next;
       });
     };

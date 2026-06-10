@@ -69,4 +69,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(DietPlanPurchase::class);
     }
+
+    public function guidanceChatHistories()
+    {
+        return $this->hasMany(GuidanceChatHistory::class);
+    }
 }

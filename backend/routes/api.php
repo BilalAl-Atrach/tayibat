@@ -10,6 +10,7 @@ use App\Http\Controllers\AdminNutritionController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\GuidanceFeedbackController;
+use App\Http\Controllers\GuidanceStorageController;
 
 Route::get('/conditions', [NutritionController::class, 'getConditions']);
 Route::post('/ask', [NutritionController::class, 'ask'])->middleware('throttle:ai');
@@ -24,6 +25,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/condition', [UserController::class, 'updateCondition']);
     Route::post('/guidance-feedback', [GuidanceFeedbackController::class, 'store'])->middleware('throttle:feedback');
     Route::post('/diet-plan', [NutritionController::class, 'dietPlan'])->middleware('throttle:diet-plan');
+    Route::get('/diet-plan/saved', [GuidanceStorageController::class, 'savedDietPlan']);
+    Route::get('/guidance-chat', [GuidanceStorageController::class, 'chat']);
+    Route::put('/guidance-chat', [GuidanceStorageController::class, 'saveChat']);
     Route::get('/rules/{condition}/lookup-food', [DietaryRuleController::class, 'lookupFoodRule']);
     Route::get('/billing/access', [BillingController::class, 'access']);
     Route::get('/billing/history', [BillingController::class, 'history']);
