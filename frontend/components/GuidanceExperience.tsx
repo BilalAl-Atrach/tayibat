@@ -310,6 +310,15 @@ export default function GuidanceExperience() {
   const visibleAvoidRules = isPremium ? avoidRules : avoidRules.slice(0, 5);
 
   const handleSelectCondition = async (condition: Condition) => {
+    if (!userStorageKey) {
+      setSelectedCondition(null);
+      setFoodRules([]);
+      setDietPlan(null);
+      setChatHistory([]);
+      setNotice(t.loginToSelectGoal);
+      return;
+    }
+
     setSelectedCondition(condition); setDietPlan(null); setIsPlanOpen(false);
     if (userStorageKey) localStorage.setItem(getSelectedConditionKey(userStorageKey), condition.name);
     setActiveTab("foods");
@@ -387,7 +396,7 @@ export default function GuidanceExperience() {
   };
 
   const handleChatSend = async () => {
-    if (!selectedCondition) { setNotice("Select a health goal first."); return; }
+    if (!selectedCondition) { setNotice(t.selectGoalToAsk); return; }
     if (!chatMessage.trim()) return;
     const outgoing = chatMessage.trim();
     const save = (msgs: ChatMessage[]) => {
@@ -498,6 +507,12 @@ export default function GuidanceExperience() {
         </div>
         {loading.rules && <RefreshCw className="mt-1 h-4 w-4 animate-spin text-stone-400" />}
       </div>
+      {!selectedCondition ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+          {userStorageKey ? t.selectGoalToAsk : t.loginToSelectGoal}
+        </div>
+      ) : (
+        <>
       {selectedCondition && !loading.rules && foodRules.length === 0 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {t.noFoodRules}
@@ -516,6 +531,8 @@ export default function GuidanceExperience() {
           onAction={() => startCheckout("premium")}
           disabled={loading.billing}
         />
+      )}
+        </>
       )}
     </div>
   );
