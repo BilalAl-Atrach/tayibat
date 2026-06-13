@@ -1,6 +1,12 @@
 # *
 User-agent: *
 Allow: /
+Disallow: /account
+Disallow: /admin
+Disallow: /admin/
+Disallow: /chat
+Disallow: /payment/success
+Disallow: /payment/cancel
 
 # Host
 Host: https://tayibatai.com
