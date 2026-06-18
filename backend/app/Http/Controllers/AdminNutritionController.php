@@ -7,6 +7,7 @@ use App\Models\DietaryRule;
 use App\Models\Food;
 use App\Models\GlobalRules;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class AdminNutritionController extends Controller
@@ -26,6 +27,7 @@ class AdminNutritionController extends Controller
         ]);
 
         $food = Food::create($validated);
+        $this->clearNutritionCaches();
 
         return response()->json($food, 201);
     }
@@ -40,6 +42,7 @@ class AdminNutritionController extends Controller
         ]);
 
         $food->update($validated);
+        $this->clearNutritionCaches();
 
         return response()->json($food);
     }
@@ -47,6 +50,7 @@ class AdminNutritionController extends Controller
     public function deleteFood(Food $food)
     {
         $food->delete();
+        $this->clearNutritionCaches();
 
         return response()->json(['message' => 'Food deleted successfully.']);
     }
@@ -64,6 +68,7 @@ class AdminNutritionController extends Controller
         ]);
 
         $condition = Condition::create($validated);
+        $this->clearNutritionCaches();
 
         return response()->json($condition, 201);
     }
@@ -76,6 +81,7 @@ class AdminNutritionController extends Controller
         ]);
 
         $condition->update($validated);
+        $this->clearNutritionCaches();
 
         return response()->json($condition);
     }
@@ -83,6 +89,7 @@ class AdminNutritionController extends Controller
     public function deleteCondition(Condition $condition)
     {
         $condition->delete();
+        $this->clearNutritionCaches();
 
         return response()->json(['message' => 'Condition deleted successfully.']);
     }
@@ -107,6 +114,7 @@ class AdminNutritionController extends Controller
             ],
             $validated
         );
+        $this->clearNutritionCaches($rule->condition_id);
 
         return response()->json($rule->load(['food:id,name,name_ar,meal_type,meal_role', 'condition:id,name,name_ar']), 201);
     }
@@ -116,6 +124,7 @@ class AdminNutritionController extends Controller
         $validated = $this->validateDietaryRule($request);
 
         $dietaryRule->update($validated);
+        $this->clearNutritionCaches($dietaryRule->condition_id);
 
         return response()->json($dietaryRule->load(['food:id,name,name_ar,meal_type,meal_role', 'condition:id,name,name_ar']));
     }
@@ -123,6 +132,7 @@ class AdminNutritionController extends Controller
     public function deleteDietaryRule(DietaryRule $dietaryRule)
     {
         $dietaryRule->delete();
+        $this->clearNutritionCaches($dietaryRule->condition_id);
 
         return response()->json(['message' => 'Dietary rule deleted successfully.']);
     }
@@ -144,6 +154,7 @@ class AdminNutritionController extends Controller
             ['food_id' => $validated['food_id']],
             $validated
         );
+        $this->clearNutritionCaches();
 
         return response()->json($rule->load('food:id,name,name_ar,meal_type,meal_role'), 201);
     }
@@ -153,6 +164,7 @@ class AdminNutritionController extends Controller
         $validated = $this->validateGlobalRule($request);
 
         $globalRule->update($validated);
+        $this->clearNutritionCaches();
 
         return response()->json($globalRule->load('food:id,name,name_ar,meal_type,meal_role'));
     }
@@ -160,6 +172,7 @@ class AdminNutritionController extends Controller
     public function deleteGlobalRule(GlobalRules $globalRule)
     {
         $globalRule->delete();
+        $this->clearNutritionCaches();
 
         return response()->json(['message' => 'Global rule deleted successfully.']);
     }
@@ -184,5 +197,21 @@ class AdminNutritionController extends Controller
             'reason' => 'nullable|string',
             'reason_ar' => 'nullable|string',
         ]);
+    }
+
+    private function clearNutritionCaches(?int $conditionId = null): void
+    {
+        Cache::forget('conditions:v1');
+        Cache::forget('foods:lookup:v1');
+
+        $conditionIds = $conditionId
+            ? [$conditionId]
+            : Condition::query()->pluck('id')->all();
+
+        foreach ($conditionIds as $id) {
+            Cache::forget('rules:v2:' . $id . ':free');
+            Cache::forget('rules:v2:' . $id . ':premium');
+            Cache::forget('diet-plan-rules:v1:' . $id);
+        }
     }
 }

@@ -10,6 +10,24 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/:all*(svg|png|jpg|jpeg|gif|webp|ico)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        source: "/",
+        headers: [
+          { key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=3600" },
+        ],
+      },
+      {
+        source: "/(about|pricing|products|contact|medical-disclaimer|privacy-policy|refund-policy|terms)",
+        headers: [
+          { key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=3600" },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "X-Frame-Options", value: "DENY" },
