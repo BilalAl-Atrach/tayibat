@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GrantPaymentAccess;
 use App\Models\DietPlanPurchase;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentWebhookLog;
@@ -256,16 +257,16 @@ class BillingController extends Controller
         ]);
 
         if ($paid) {
-            $this->grantAccess($transaction);
+            GrantPaymentAccess::dispatch($transaction->id, $log->id);
         }
 
         $log->update([
             'payment_transaction_id' => $transaction->id,
-            'message' => $paid ? 'Payment confirmed and access granted.' : 'Payment callback received.',
+            'message' => $paid ? 'Payment confirmed. Access grant queued.' : 'Payment callback received.',
         ]);
 
         return response()->json([
-            'message' => $paid ? 'Payment confirmed and access granted.' : 'Payment callback received.',
+            'message' => $paid ? 'Payment confirmed. Access grant queued.' : 'Payment callback received.',
             'paid' => $paid,
         ]);
     }
@@ -315,10 +316,10 @@ class BillingController extends Controller
             'paid_at' => $transaction->paid_at ?: now(),
         ]);
 
-        $this->grantAccess($transaction);
+        GrantPaymentAccess::dispatch($transaction->id);
 
         return response()->json([
-            'message' => 'Payment marked as paid and access granted.',
+            'message' => 'Payment marked as paid. Access grant queued.',
             'transaction' => $transaction->fresh()->load('user:id,name,email'),
         ]);
     }
@@ -453,39 +454,6 @@ class BillingController extends Controller
         return collect($request->headers->all())
             ->except(['authorization', 'cookie', 'x-whish-signature', 'x-signature'])
             ->all();
-    }
-
-    private function grantAccess(PaymentTransaction $transaction): void
-    {
-        if ($transaction->type === 'premium') {
-            Subscription::updateOrCreate(
-                ['user_id' => $transaction->user_id, 'plan' => 'premium'],
-                [
-                    'status' => 'active',
-                    'price' => self::PREMIUM_PRICE,
-                    'started_at' => now(),
-                    'expires_at' => now()->addMonths(self::PREMIUM_DURATION_MONTHS),
-                ]
-            );
-
-            return;
-        }
-
-        if ($transaction->type === 'diet_plan' && $transaction->diet_plan_duration && $transaction->condition_id) {
-            DietPlanPurchase::updateOrCreate(
-                [
-                    'user_id' => $transaction->user_id,
-                    'condition_id' => $transaction->condition_id,
-                    'duration' => $transaction->diet_plan_duration,
-                ],
-                [
-                    'price' => self::DIET_PLAN_PRICES[$transaction->diet_plan_duration],
-                    'status' => 'active',
-                    'paid_at' => now(),
-                    'expires_at' => $this->dietPlanExpiresAt($transaction->diet_plan_duration),
-                ]
-            );
-        }
     }
 
     private function dietPlanExpiresAt(string $duration)
