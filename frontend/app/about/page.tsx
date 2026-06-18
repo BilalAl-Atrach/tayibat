@@ -7,6 +7,10 @@ import {
   Users,
   Sparkles,
   Salad,
+  Zap,
+  Download,
+  Check,
+  MessageCircle,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -49,6 +53,18 @@ const steps = [
   "Generate a personalized diet plan based on your selected goal.",
 ];
 
+const premiumChecklist = [
+  "Full access to every allowed, moderate, and avoid food table",
+  "Unlimited AI guidance questions for a full month",
+  "No daily limits while your Premium month is active",
+];
+
+const dietPlanChecklist = [
+  "Your full 1-month meal plan, generated in about 10 seconds",
+  "Built from the allowed and moderate foods for your selected goal",
+  "Save it as a PDF and keep it on your phone, instructions included",
+];
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-white">
@@ -78,6 +94,12 @@ export default function AboutPage() {
               dietary guidance, food recommendations, and intelligent meal
               planning. Our goal is to simplify healthy eating and make
               nutrition guidance easier to follow.
+            </p>
+
+            <p className="mt-4 max-w-3xl text-base leading-7 text-gray-600">
+              Tayibat is inspired by the teachings of Dr. Diyaa Al Awadi on
+              practical, food-first approaches to wellness — translated here
+              into structured, everyday guidance you can actually follow.
             </p>
 
             <div className="mt-10 grid w-full gap-3 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-center sm:gap-4">
@@ -159,6 +181,110 @@ export default function AboutPage() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Value / Pricing Anchor Section */}
+      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-2 text-sm font-semibold text-green-700">
+            <Zap className="h-4 w-4" />
+            Why $15 Goes a Long Way
+          </div>
+
+          <h2 className="mt-5 text-3xl font-bold text-gray-950">
+            Two different ways to get $15 of real value
+          </h2>
+
+          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-gray-700">
+            Premium access and a diet plan package are two separate things,
+            each priced at $15, each solving a different need.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          {/* Premium Access Card */}
+          <div className="rounded-lg border border-green-100 bg-white p-6 shadow-sm sm:p-8">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-700 shadow-sm">
+                <MessageCircle className="h-6 w-6" />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Premium Access
+                </h3>
+                <p className="text-sm text-gray-600">
+                  $15 for a full month
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-5 text-base leading-7 text-gray-700">
+              Less than the cost of a single nutritionist visit, and
+              available the moment you have a question, day or night.
+            </p>
+
+            <div className="mt-6 space-y-3">
+              {premiumChecklist.map((item) => (
+                <div
+                  key={item}
+                  className="flex items-start gap-3 rounded-xl bg-green-50/60 p-4"
+                >
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                  <span className="text-sm font-medium leading-6 text-gray-700">
+                    {item}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Diet Plan Package Card */}
+          <div className="rounded-lg border border-green-100 bg-white p-6 shadow-sm sm:p-8">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-700 shadow-sm">
+                <Download className="h-6 w-6" />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  1-Month Diet Plan
+                </h3>
+                <p className="text-sm text-gray-600">
+                  $15, generated in about 10 seconds
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-5 text-base leading-7 text-gray-700">
+              No subscription, no waiting. Pick your goal, pay once, and get
+              a ready-to-follow plan in seconds.
+            </p>
+
+            <div className="mt-6 space-y-3">
+              {dietPlanChecklist.map((item) => (
+                <div
+                  key={item}
+                  className="flex items-start gap-3 rounded-xl bg-green-50/60 p-4"
+                >
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-600" />
+                  <span className="text-sm font-medium leading-6 text-gray-700">
+                    {item}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/pricing"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-green-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-green-700"
+          >
+            View Pricing
+          </Link>
         </div>
       </section>
 

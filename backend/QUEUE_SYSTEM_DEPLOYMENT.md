@@ -9,6 +9,7 @@ The Tayibat AI backend now uses Laravel's queue system to handle background jobs
 ### 1. Queued Jobs
 
 #### GrantPaymentAccess Job
+
 - **Purpose**: Grants user access to premium features or diet plans after payment confirmation
 - **Trigger**: When payment webhook is received and payment status is "paid"
 - **Idempotency**: Uses database-level unique constraint on `(provider, provider_reference)` to prevent duplicate processing
@@ -16,6 +17,7 @@ The Tayibat AI backend now uses Laravel's queue system to handle background jobs
 - **Failure Notification**: Admin receives email notification if job fails after all retries
 
 #### StoreContactMessage Job
+
 - **Purpose**: Asynchronously stores contact form submissions and notifies admin
 - **Trigger**: When user submits contact form (returns HTTP 202 Accepted)
 - **Idempotency**: Each message has unique ID
@@ -43,6 +45,7 @@ The application includes scheduled commands for queue maintenance:
 ### 4. Job Failure Handling
 
 When a job fails:
+
 1. **Automatic Retry**: Job is retried up to 3 times (exponential backoff)
 2. **Logging**: Detailed error logged to `storage/logs/laravel.log`
 3. **Database Storage**: Failed job stored in `failed_jobs` table
@@ -61,6 +64,7 @@ autorestart=true
 ```
 
 This configuration:
+
 - Runs 2 concurrent worker processes
 - Automatically restarts failed workers
 - Processes jobs from Redis queue (production) or database (local)
@@ -168,12 +172,13 @@ php artisan queue:monitor jobs:pending,jobs:processed,jobs:failed
 ```json
 // Response (202 Accepted)
 {
-  "message": "Your message was received successfully. One of our support team will reply to your email as much as faster.",
-  "queued": true
+    "message": "Your message was received successfully. One of our support team will reply to your email as much as faster.",
+    "queued": true
 }
 ```
 
 Frontend should:
+
 - Show "Your message has been received" notification
 - Don't expect immediate database persistence
 - Assume admin will be notified via email
@@ -187,8 +192,8 @@ Frontend should:
 ```json
 // Response (200 OK)
 {
-  "message": "Payment confirmed. Access grant queued.",
-  "paid": true
+    "message": "Payment confirmed. Access grant queued.",
+    "paid": true
 }
 ```
 
@@ -214,6 +219,7 @@ In `phpunit.xml`, the test suite uses `sync` queue driver to ensure jobs execute
 ```
 
 This means:
+
 - Jobs run synchronously in tests
 - Database transactions are reliable
 - No need to mock job dispatch
@@ -223,24 +229,27 @@ This means:
 ### Jobs Not Processing
 
 1. **Check queue driver is running**:
-   ```bash
-   redis-cli ping  # Should return PONG
-   ```
+
+    ```bash
+    redis-cli ping  # Should return PONG
+    ```
 
 2. **Verify worker is running**:
-   ```bash
-   ps aux | grep queue:work
-   ```
+
+    ```bash
+    ps aux | grep queue:work
+    ```
 
 3. **Check for stuck jobs**:
-   ```bash
-   php artisan queue:check-failed-jobs
-   ```
+
+    ```bash
+    php artisan queue:check-failed-jobs
+    ```
 
 4. **Monitor logs**:
-   ```bash
-   tail -f storage/logs/laravel.log
-   ```
+    ```bash
+    tail -f storage/logs/laravel.log
+    ```
 
 ### Payment Access Not Granted
 
@@ -262,17 +271,19 @@ If migrating existing jobs:
 
 1. **Backup database** before migration
 2. **Run migrations**:
-   ```bash
-   php artisan migrate
-   ```
+
+    ```bash
+    php artisan migrate
+    ```
 
 3. **Test in staging** with realistic load
 4. **Verify job tables created**:
-   ```sql
-   SELECT * FROM jobs LIMIT 1;
-   SELECT * FROM failed_jobs LIMIT 1;
-   SELECT * FROM payment_webhook_logs LIMIT 1;
-   ```
+
+    ```sql
+    SELECT * FROM jobs LIMIT 1;
+    SELECT * FROM failed_jobs LIMIT 1;
+    SELECT * FROM payment_webhook_logs LIMIT 1;
+    ```
 
 5. **Enable queue worker** in production
 6. **Monitor** for first 24 hours
