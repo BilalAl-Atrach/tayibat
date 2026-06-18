@@ -92,8 +92,7 @@ export default function AboutPage() {
             <p className="mt-6 max-w-3xl text-lg leading-8 text-gray-700">
               Tayibat helps users understand food choices through personalized
               dietary guidance, food recommendations, and intelligent meal
-              planning. Our goal is to simplify healthy eating and make
-              nutrition guidance easier to follow.
+              planning.
             </p>
 
             <p className="mt-4 max-w-3xl text-base leading-7 text-gray-600">
@@ -134,12 +133,6 @@ export default function AboutPage() {
               Helping people build better eating habits with confidence
             </h2>
 
-            <p className="mt-5 text-lg leading-8 text-gray-700">
-              We believe healthy eating should feel simple, practical, and
-              personalized. Tayibat was designed to guide users toward smarter
-              food choices using organized dietary rules, interactive food
-              guidance, and structured meal plans.
-            </p>
 
             <p className="mt-4 text-lg leading-8 text-gray-700">
               Whether you are trying to manage a condition, improve wellness, or
